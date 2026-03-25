@@ -1,0 +1,23 @@
+defmodule NurseryHubWeb.Router do
+  use Phoenix.Router
+  import Phoenix.LiveView.Router
+
+  pipeline :browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+
+    # Dashboard login — username and password set in config/config.exs
+    # Browser will show a login prompt before serving any page.
+    plug Plug.BasicAuth, Application.compile_env!(:nursery_hub, :dashboard_auth)
+
+    plug :put_root_layout, html: {NurseryHubWeb.Layouts, :root}
+  end
+
+  scope "/", NurseryHubWeb do
+    pipe_through :browser
+
+    live "/",                       DashboardLive, :overview
+    live "/site/:site_id",          DashboardLive, :site
+    live "/zone/:site_id/:zone_id", ZoneLive,      :detail
+  end
+end

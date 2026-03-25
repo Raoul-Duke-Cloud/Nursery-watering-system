@@ -442,6 +442,20 @@ This connects to Mosquitto as a simulated ESP32 and populates 8 zones across
 dry zone, a low-moisture zone, a zone actively watering, and a sensor fault
 cycling in and out. Press Ctrl+C to stop. Zones freeze on screen when stopped.
 
+## System settings
+
+Go to **http://localhost:4000/settings** (or click ⚙ Settings on the dashboard).
+
+| Section | What you configure |
+|---|---|
+| Email Alerts | SMTP server, credentials, from/to addresses, enable/disable |
+| SMS Alerts | Twilio account SID, auth token, phone numbers, enable/disable |
+| Alert Routing | Which alert types send email, SMS, or both |
+| OTA Firmware | Current firmware version number for ESP32 OTA updates |
+
+> Email and SMS delivery are not yet active — credentials can be saved now and
+> delivery will be enabled in the next update.
+
 ## Deploying firmware updates (OTA)
 
 Once ESP32s are deployed at sites, update firmware without physical access:
@@ -450,9 +464,8 @@ Once ESP32s are deployed at sites, update firmware without physical access:
 2. Increment `FIRMWARE_VERSION` in the firmware (e.g. 42 → 43)
 3. Arduino IDE → **Sketch → Export Compiled Binary** — saves a `.bin` file
 4. Copy the `.bin` to `priv/static/firmware/esp32_plant_monitor.bin` on your server
-5. Increment `firmware_version` in `config/config.exs` to match
-6. Restart NurseryHub
-7. Each ESP32 checks for updates on next boot and flashes automatically
+5. Go to **Settings → OTA Firmware**, update the version number, click Save & Deploy
+6. Each ESP32 checks for updates on next boot and flashes automatically
 
 **Rollback:** if new firmware crashes on boot, the ESP32 bootloader automatically
 restores the previous version. No manual intervention needed.

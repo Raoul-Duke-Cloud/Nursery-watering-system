@@ -57,9 +57,15 @@ defmodule NurseryHubWeb.DashboardLive do
             <%= map_size(@zones) %> active zones across <%= map_size(@sites) %> sites
           </p>
         </div>
-        <div class="text-right">
-          <div class="text-xs text-gray-500">Last update</div>
-          <div class="text-sm text-gray-300"><%= format_time(@last_refresh) %></div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <div class="text-xs text-gray-500">Last update</div>
+            <div class="text-sm text-gray-300"><%= format_time(@last_refresh) %></div>
+          </div>
+          <a href="/settings"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg">
+            ⚙ Settings
+          </a>
         </div>
       </div>
 

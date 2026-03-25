@@ -12,24 +12,52 @@ defmodule NurseryHubWeb.ZoneLive do
       Phoenix.PubSub.subscribe(NurseryHub.PubSub, "zones:updates")
     end
 
-    readings = SensorReading.recent(site_id, zone_id, 48)
+    {from_dt, to_dt} = default_range()
+    readings = SensorReading.range(site_id, zone_id, from_dt, to_dt)
     current  = ZoneServer.state(site_id, zone_id)
 
     {:ok, assign(socket,
-      site_id:  site_id,
-      zone_id:  zone_id,
-      readings: readings,
-      current:  current
+      site_id:   site_id,
+      zone_id:   zone_id,
+      readings:  readings,
+      current:   current,
+      date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
+      date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
     )}
   end
 
   @impl true
   def handle_info({:zone_update, zone}, socket) do
     if zone.site_id == socket.assigns.site_id and zone.zone_id == socket.assigns.zone_id do
-      readings = SensorReading.recent(socket.assigns.site_id, socket.assigns.zone_id, 48)
-      {:noreply, assign(socket, current: zone, readings: readings)}
+      {:noreply, assign(socket, current: zone)}
     else
       {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_event("quick_range", %{"days" => days_str}, socket) do
+    days = String.to_integer(days_str)
+    to_dt   = DateTime.utc_now()
+    from_dt = DateTime.add(to_dt, -days * 86400, :second)
+    readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
+    {:noreply, assign(socket,
+      readings:  readings,
+      date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
+      date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
+    )}
+  end
+
+  @impl true
+  def handle_event("apply_range", %{"from" => from_str, "to" => to_str}, socket) do
+    with {:ok, from_date} <- Date.from_iso8601(from_str),
+         {:ok, to_date}   <- Date.from_iso8601(to_str) do
+      from_dt = DateTime.new!(from_date, ~T[00:00:00], "Etc/UTC")
+      to_dt   = DateTime.new!(to_date,   ~T[23:59:59], "Etc/UTC")
+      readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
+      {:noreply, assign(socket, readings: readings, date_from: from_str, date_to: to_str)}
+    else
+      _ -> {:noreply, socket}
     end
   end
 
@@ -85,6 +113,54 @@ defmodule NurseryHubWeb.ZoneLive do
             class="bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded-lg">
             Stop
           </button>
+        </div>
+      </div>
+
+      <%!-- Date range controls --%>
+      <div class="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-3">
+
+          <%!-- Quick range buttons --%>
+          <div class="flex gap-2">
+            <button phx-click="quick_range" phx-value-days="1"
+              class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded">
+              24h
+            </button>
+            <button phx-click="quick_range" phx-value-days="7"
+              class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded">
+              7 days
+            </button>
+            <button phx-click="quick_range" phx-value-days="30"
+              class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded">
+              30 days
+            </button>
+          </div>
+
+          <div class="text-gray-600 text-sm">|</div>
+
+          <%!-- Custom range --%>
+          <form phx-submit="apply_range" class="flex items-center gap-2">
+            <input type="date" name="from" value={@date_from}
+              class="bg-gray-800 border border-gray-600 text-gray-300 text-xs rounded px-2 py-1.5" />
+            <span class="text-gray-500 text-xs">to</span>
+            <input type="date" name="to" value={@date_to}
+              class="bg-gray-800 border border-gray-600 text-gray-300 text-xs rounded px-2 py-1.5" />
+            <button type="submit"
+              class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded">
+              Apply
+            </button>
+          </form>
+
+          <div class="ml-auto">
+            <a href={"/csv/#{@site_id}/#{@zone_id}?from=#{@date_from}&to=#{@date_to}"}
+              class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
+              ↓ Download CSV
+            </a>
+          </div>
+
+        </div>
+        <div class="text-xs text-gray-500 mt-2">
+          <%= length(@readings) %> readings in selected range
         </div>
       </div>
 
@@ -219,4 +295,10 @@ defmodule NurseryHubWeb.ZoneLive do
   defp moisture_class(pct) when pct < 20, do: "text-red-400"
   defp moisture_class(pct) when pct < 40, do: "text-yellow-400"
   defp moisture_class(_),                 do: "text-green-400"
+
+  defp default_range do
+    to_dt   = DateTime.utc_now()
+    from_dt = DateTime.add(to_dt, -7 * 86400, :second)
+    {from_dt, to_dt}
+  end
 end

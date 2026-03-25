@@ -360,15 +360,28 @@ mosquitto_pub -t "test" -m "hello" ← window 2
 
 ### STEP 4 — Run NurseryHub
 
-```bash
+Open PowerShell and run each line separately:
+
+```
 cd C:\Users\Ramon\Downloads\nursery_hub
-mix setup          # first time only — installs deps + creates database
-mix run --no-halt
+```
+
+First time only — install deps and create the database:
+```
+cmd /c "C:\Program Files\Elixir\bin\mix.bat" setup
+```
+
+Start the server (terminal will appear to hang — that's correct, it's running):
+```
+cmd /c "C:\Program Files\Elixir\bin\mix.bat" run -e ":timer.sleep(:infinity)"
 ```
 
 Open browser → **http://localhost:4000**
 
 Zone cards appear automatically as each ESP32 connects for the first time.
+
+> **Note — PowerShell script policy:** If `mix` gives a "running scripts is disabled" error,
+> always use the full `cmd /c "C:\Program Files\Elixir\bin\mix.bat" ...` form above.
 
 ---
 
@@ -405,12 +418,29 @@ Zone cards appear automatically as each ESP32 connects for the first time.
 
 ## Day-to-day use
 
-- Leave `mix run --no-halt` running (or set as a Windows service)
+- Start with: `cmd /c "C:\Program Files\Elixir\bin\mix.bat" run -e ":timer.sleep(:infinity)"` (or set as a Windows service)
 - Dashboard at **http://localhost:4000**
-- Click **History** on any zone for moisture + VPD charts
+- Click **History** on any zone for moisture + VPD charts with date range selection
 - Click **Water now** for a manual 15-second drip on any zone
+- On any zone history page, select a date range and click **↓ Download CSV** to export readings
 - Database at `priv/nursery_hub.db` — open with **DB Browser for SQLite**
   (free download) to query or export to Excel
+
+## Testing the dashboard without hardware (simulator)
+
+Run the server in one PowerShell window, then open a second window and run:
+
+```
+cd C:\Users\Ramon\Downloads\nursery_hub
+```
+```
+cmd /c "C:\Program Files\Elixir\bin\mix.bat" sim
+```
+
+This connects to Mosquitto as a simulated ESP32 and populates 8 zones across
+2 sites (Northcote + Fitzroy) with slowly drifting values. Includes a critically
+dry zone, a low-moisture zone, a zone actively watering, and a sensor fault
+cycling in and out. Press Ctrl+C to stop. Zones freeze on screen when stopped.
 
 ## Deploying firmware updates (OTA)
 

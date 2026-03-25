@@ -24,6 +24,8 @@ config :nursery_hub, :dashboard_auth,
   password: "CHANGE_THIS_DASHBOARD_PASSWORD"
 
 # ── Database (SQLite) ─────────────────────────────────────────────────────────
+config :nursery_hub, ecto_repos: [NurseryHub.Repo]
+
 config :nursery_hub, NurseryHub.Repo,
   database: Path.expand("../priv/nursery_hub.db", __DIR__),
   pool_size: 5

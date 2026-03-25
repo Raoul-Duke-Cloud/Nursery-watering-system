@@ -56,6 +56,16 @@ defmodule NurseryHub.SensorReading do
     |> Repo.all()
   end
 
+  @doc "All readings for a zone between two DateTimes, most recent first."
+  def range(site_id, zone_id, from_dt, to_dt) do
+    from(r in __MODULE__,
+      where: r.site_id == ^site_id and r.zone_id == ^zone_id
+         and r.inserted_at >= ^from_dt and r.inserted_at <= ^to_dt,
+      order_by: [desc: r.inserted_at]
+    )
+    |> Repo.all()
+  end
+
   @doc "Latest single reading per zone — used by the dashboard overview."
   def latest_per_zone do
     # Subquery: find the max id per site/zone combination

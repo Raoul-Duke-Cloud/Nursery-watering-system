@@ -5,6 +5,9 @@ defmodule NurseryHubWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug :fetch_live_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
 
     # Dashboard login disabled for local development
     # Re-enable before deploying to VPS: plug Plug.BasicAuth, Application.compile_env!(:nursery_hub, :dashboard_auth)
@@ -18,6 +21,8 @@ defmodule NurseryHubWeb.Router do
     live "/",                       DashboardLive, :overview
     live "/site/:site_id",          DashboardLive, :site
     live "/zone/:site_id/:zone_id", ZoneLive,      :detail
+
+    get "/csv/:site_id/:zone_id",   CsvController, :download
   end
 
   # OTA firmware endpoints — no auth, accessed directly by ESP32s

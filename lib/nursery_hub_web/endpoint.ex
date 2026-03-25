@@ -1,5 +1,7 @@
 defmodule NurseryHubWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :nursery_hub
+  use Phoenix.Endpoint,
+    otp_app: :nursery_hub,
+    render_errors: [formats: [html: NurseryHubWeb.ErrorHTML], layout: false]
 
   @session_options [
     store: :cookie,

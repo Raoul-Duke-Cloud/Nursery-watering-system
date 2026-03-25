@@ -1,6 +1,6 @@
 /*
  * ESP32 Plant Monitoring — Multi-Zone Drip/Feed System
- * Version 4.0
+ * Version 4.1
  *
  * One ESP32 controls multiple independent zones.
  * Each zone has its own moisture sensor and solenoid valve.
@@ -17,7 +17,7 @@
  * PIN ASSIGNMENTS (see NurseryHub_Overview_and_Setup.md for wiring diagram)
  *
  *   SHARED (one per ESP32):
- *     DHT11       → GPIO27
+ *     DHT22       → GPIO27
  *     BH1750      → GPIO21 (SDA), GPIO22 (SCL)
  *     MLX90614    → GPIO21 (SDA), GPIO22 (SCL)  [shares I2C bus]
  *     SD Card     → GPIO5 (CS), GPIO23 (MOSI), GPIO19 (MISO), GPIO18 (SCK)
@@ -32,6 +32,12 @@
  * - DHT sensor library (Adafruit)
  * - PubSubClient  (mesh mode only)
  * - ArduinoJson   (mesh mode only)
+ *
+ * ── v4.1 CHANGES ───────────────────────────────────────────────────────────
+ * - Boot self-test: checks all sensors and pulses each relay on startup
+ * - Dripper performance tracking: monitors moisture rise after each watering
+ *   and flags reduced capacity if a zone consistently underperforms baseline
+ * ──────────────────────────────────────────────────────────────────────────
  */
 
 #include <Wire.h>
@@ -52,9 +58,11 @@
 #if TEST_MODE
   #define READING_INTERVAL  10000    // 10s between readings (fast for testing)
   #define WATERING_COOLDOWN 60000    // 1 min cooldown (easy to observe)
+  #define DRIP_CHECK_DELAY  30000    // 30s post-drip check (fast for testing)
 #else
   #define READING_INTERVAL  30000    // 30s between readings
   #define WATERING_COOLDOWN 900000   // 15 min cooldown
+  #define DRIP_CHECK_DELAY  120000   // 2 min post-drip moisture check
 #endif
 
 #if !TEST_MODE
@@ -105,7 +113,7 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
 // SHARED SENSOR PINS
 // ═══════════════════════════════════════════════════════════════════
 
-#define DHT_PIN   27    // DHT11 — air temp + humidity
+#define DHT_PIN   27    // DHT22 — air temp + humidity
 #define I2C_SDA   21    // BH1750 + MLX90614 share this I2C bus
 #define I2C_SCL   22
 #define SD_CS      5
@@ -129,6 +137,20 @@ const unsigned long SERVER_TIMEOUT_MS = 1800000;
 
 const int MOISTURE_DRY = 3200;
 const int MOISTURE_WET = 1200;
+
+// ═══════════════════════════════════════════════════════════════════
+// DRIPPER PERFORMANCE PARAMETERS
+// ═══════════════════════════════════════════════════════════════════
+
+// Number of watering events to average for the baseline
+#define DRIP_HISTORY_SIZE 5
+
+// Minimum events before fault detection activates (avoids false positives early on)
+#define DRIP_MIN_BASELINE 3
+
+// If moisture rise is below this fraction of baseline, flag as reduced capacity
+// e.g. 0.5 = fault if rise is less than 50% of the average
+const float DRIPPER_FAULT_THRESHOLD = 0.5;
 
 // ═══════════════════════════════════════════════════════════════════
 // OPERATING MODES
@@ -194,6 +216,17 @@ unsigned long lastServerContact = 0;
 bool   sdAvailable = false;
 String dataFile    = "/plantdata.csv";
 
+// ── Dripper performance tracking ─────────────────────────────────
+
+int           moistureBeforeDrip[NUM_ZONES];
+bool          waitingForDripCheck[NUM_ZONES];
+unsigned long dripCheckTime[NUM_ZONES];
+
+float dripHistory[NUM_ZONES][DRIP_HISTORY_SIZE];
+int   dripHistoryCount[NUM_ZONES];
+int   dripHistoryIdx[NUM_ZONES];
+bool  dripperFault[NUM_ZONES];
+
 // ═══════════════════════════════════════════════════════════════════
 // VPD CALCULATION
 // ═══════════════════════════════════════════════════════════════════
@@ -246,6 +279,136 @@ void readSharedSensors() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// BOOT SELF-TEST
+// ═══════════════════════════════════════════════════════════════════
+
+void runBootSelfTest() {
+  Serial.println("\n┌─── BOOT SELF-TEST ──────────────────────────────────┐");
+
+  // ── Shared sensors ──────────────────────────────────────────────
+  Serial.println("│  Shared sensors:");
+
+  // DHT22
+  delay(2000);  // DHT22 needs time to stabilise after power-on
+  float t = dht.readTemperature();
+  float h = dht.readHumidity();
+  if (isnan(t) || isnan(h))
+    Serial.println("│    DHT22      FAIL — no reading (check wiring GPIO27)");
+  else
+    Serial.printf( "│    DHT22      OK   — %.1f°C  %.1f%%RH\n", t, h);
+
+  // BH1750
+  float lux = lightMeter.readLightLevel();
+  if (lux < 0)
+    Serial.println("│    BH1750     FAIL — no reading (check I2C GPIO21/22)");
+  else
+    Serial.printf( "│    BH1750     OK   — %.0f lux\n", lux);
+
+  // MLX90614
+  float leafT = mlx.readObjectTempC();
+  if (leafT < -20 || leafT > 80)
+    Serial.println("│    MLX90614   FAIL — reading out of range (check I2C GPIO21/22)");
+  else
+    Serial.printf( "│    MLX90614   OK   — %.1f°C object temp\n", leafT);
+
+  // ── Per-zone moisture sensors ────────────────────────────────────
+  Serial.println("│");
+  Serial.println("│  Moisture sensors:");
+  for (int z = 0; z < NUM_ZONES; z++) {
+    int raw = analogRead(MOISTURE_PINS[z]);
+    int pct = constrain(map(raw, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
+    if (raw < 100 || raw > 4000)
+      Serial.printf("│    [%s]  FAIL — raw ADC %d (check wiring GPIO%d)\n",
+        ZONE_IDS[z], raw, MOISTURE_PINS[z]);
+    else
+      Serial.printf("│    [%s]  OK   — %d%% moisture (raw %d)\n",
+        ZONE_IDS[z], pct, raw);
+  }
+
+  // ── Relay / valve pulse test ─────────────────────────────────────
+  Serial.println("│");
+  Serial.println("│  Relay test (each valve pulses 500ms — listen for click):");
+  for (int z = 0; z < NUM_ZONES; z++) {
+    Serial.printf("│    [%s]  pulsing...", ZONE_IDS[z]);
+    digitalWrite(RELAY_PINS[z], HIGH);
+    delay(500);
+    digitalWrite(RELAY_PINS[z], LOW);
+    Serial.println(" done");
+    delay(300);
+  }
+
+  // ── SD card ─────────────────────────────────────────────────────
+  Serial.println("│");
+  Serial.printf( "│  SD card:    %s\n", sdAvailable ? "OK" : "not present (logging to server only)");
+
+  Serial.println("└─────────────────────────────────────────────────────┘\n");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRIPPER PERFORMANCE TRACKING
+// ═══════════════════════════════════════════════════════════════════
+
+float dripBaseline(int zone) {
+  if (dripHistoryCount[zone] < DRIP_MIN_BASELINE) return -1;
+  float sum = 0;
+  int count = min(dripHistoryCount[zone], DRIP_HISTORY_SIZE);
+  for (int i = 0; i < count; i++) sum += dripHistory[zone][i];
+  return sum / count;
+}
+
+void recordDripResult(int zone, int moistureBefore, int moistureAfter) {
+  int rise = moistureAfter - moistureBefore;
+
+  // Store in rolling history
+  dripHistory[zone][dripHistoryIdx[zone]] = (float)rise;
+  dripHistoryIdx[zone] = (dripHistoryIdx[zone] + 1) % DRIP_HISTORY_SIZE;
+  if (dripHistoryCount[zone] < DRIP_HISTORY_SIZE) dripHistoryCount[zone]++;
+
+  float baseline = dripBaseline(zone);
+
+  Serial.printf("DRIPPER CHECK [%s] — rise: %d%%", ZONE_IDS[zone], rise);
+  if (baseline < 0) {
+    Serial.printf("  (baseline building — %d/%d events)\n",
+      dripHistoryCount[zone], DRIP_MIN_BASELINE);
+    dripperFault[zone] = false;
+    return;
+  }
+
+  Serial.printf("  baseline: %.1f%%", baseline);
+
+  if (baseline < 1.0) {
+    // Baseline is near zero — moisture sensor may not be in soil
+    Serial.println("  WARNING: baseline very low, check sensor placement");
+    dripperFault[zone] = false;
+    return;
+  }
+
+  if ((float)rise < baseline * DRIPPER_FAULT_THRESHOLD) {
+    dripperFault[zone] = true;
+    Serial.printf("  *** FAULT — only %.0f%% of expected rise — check dripper/valve\n",
+      ((float)rise / baseline) * 100.0);
+  } else {
+    dripperFault[zone] = false;
+    Serial.println("  OK");
+  }
+}
+
+void checkDripperPerformance() {
+  unsigned long now = millis();
+  for (int z = 0; z < NUM_ZONES; z++) {
+    if (waitingForDripCheck[z] && now >= dripCheckTime[z]) {
+      waitingForDripCheck[z] = false;
+      if (zoneSensors[z].moisture_ok) {
+        int moistureAfter = readMoisture(z);
+        recordDripResult(z, moistureBeforeDrip[z], moistureAfter);
+      } else {
+        Serial.printf("DRIPPER CHECK [%s] — skipped (moisture sensor fault)\n", ZONE_IDS[z]);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // OPERATING MODE
 // ═══════════════════════════════════════════════════════════════════
 
@@ -291,6 +454,14 @@ void printDecisionLog(int zone, int moisture, float vpd, float lux,
   else Serial.printf("│  Cooldown: %lus remaining\n",
     ((unsigned long)WATERING_COOLDOWN - sinceLast) / 1000);
 
+  float baseline = dripBaseline(zone);
+  if (baseline >= 0)
+    Serial.printf("│  Dripper:  baseline %.1f%% rise  %s\n",
+      baseline, dripperFault[zone] ? "*** REDUCED CAPACITY ***" : "OK");
+  else
+    Serial.printf("│  Dripper:  building baseline (%d/%d events)\n",
+      dripHistoryCount[zone], DRIP_MIN_BASELINE);
+
   if (moisture < MOISTURE_LOW && !night && cooldownOk)
     Serial.printf("│  Decision: DRIP for %lus  (%.2fx VPD mult)\n",
       duration / 1000, (float)duration / BASE_DRIP_MS);
@@ -306,6 +477,9 @@ void printDecisionLog(int zone, int moisture, float vpd, float lux,
 // ═══════════════════════════════════════════════════════════════════
 
 void startDrip(int zone, unsigned long duration, const char* reason) {
+  // Record moisture before drip for performance tracking
+  moistureBeforeDrip[zone] = lastMoisture[zone];
+
   currentDripDuration[zone] = duration;
   wateringStartTime[zone]   = millis();
   isWatering[zone]          = true;
@@ -318,6 +492,14 @@ void stopDrip(int zone, const char* reason) {
   isWatering[zone]       = false;
   lastWateringTime[zone] = millis();
   Serial.printf("DRIP STOP  [%s] — %s\n", ZONE_IDS[zone], reason);
+
+  // Schedule post-drip moisture check to assess dripper performance
+  if (zoneSensors[zone].moisture_ok) {
+    waitingForDripCheck[zone] = true;
+    dripCheckTime[zone] = millis() + DRIP_CHECK_DELAY;
+    Serial.printf("DRIPPER CHECK [%s] — scheduled in %ds\n",
+      ZONE_IDS[zone], DRIP_CHECK_DELAY / 1000);
+  }
 }
 
 void controlZone(int zone, int moisture, float vpd, float lux) {
@@ -373,7 +555,7 @@ void initSD() {
   sdAvailable = true;
   if (!SD.exists(dataFile)) {
     File f = SD.open(dataFile, FILE_WRITE);
-    if (f) { f.println("ts_s,site,zone,moisture,lux,leaf_temp,air_temp,humidity,vpd,watering,mode"); f.close(); }
+    if (f) { f.println("ts_s,site,zone,moisture,lux,leaf_temp,air_temp,humidity,vpd,watering,dripper_fault,mode"); f.close(); }
   }
   Serial.println("SD card ready");
 }
@@ -392,6 +574,7 @@ void logZoneToSD(int zone, int moisture, OperatingMode mode) {
   f.print(sharedHumidity,1); f.print(",");
   f.print(sharedVPD,3);   f.print(",");
   f.print(isWatering[zone] ? 1 : 0); f.print(",");
+  f.print(dripperFault[zone] ? 1 : 0); f.print(",");
   f.println(modeNames[mode]);
   f.close();
 }
@@ -403,20 +586,22 @@ void logZoneToSD(int zone, int moisture, OperatingMode mode) {
 #if !TEST_MODE
 void publishZone(int zone, int moisture) {
   if (!mqtt.connected()) return;
-  StaticJsonDocument<384> doc;
-  doc["site"]      = SITE_ID;      doc["zone"]      = ZONE_IDS[zone];
-  doc["ts"]        = millis()/1000; doc["moisture"]  = moisture;
-  doc["lux"]       = sharedLux;    doc["leaf_temp"] = sharedLeafTemp;
-  doc["air_temp"]  = sharedAirTemp; doc["humidity"]  = sharedHumidity;
-  doc["vpd"]       = sharedVPD;    doc["watering"]  = isWatering[zone];
-  doc["valve"]     = isWatering[zone] ? "open" : "closed";
-  doc["mode"]      = modeNames[determineModeForZone(zone)];
+  StaticJsonDocument<512> doc;
+  doc["site"]          = SITE_ID;      doc["zone"]          = ZONE_IDS[zone];
+  doc["ts"]            = millis()/1000; doc["moisture"]      = moisture;
+  doc["lux"]           = sharedLux;    doc["leaf_temp"]      = sharedLeafTemp;
+  doc["air_temp"]      = sharedAirTemp; doc["humidity"]      = sharedHumidity;
+  doc["vpd"]           = sharedVPD;    doc["watering"]       = isWatering[zone];
+  doc["valve"]         = isWatering[zone] ? "open" : "closed";
+  doc["mode"]          = modeNames[determineModeForZone(zone)];
+  doc["dripper_fault"] = dripperFault[zone];
+  doc["dripper_baseline"] = dripBaseline(zone);
   JsonObject ok = doc.createNestedObject("sensor_ok");
   ok["moisture"] = zoneSensors[zone].moisture_ok;
   ok["dht"]      = sharedSensors.dht_ok;
   ok["light"]    = sharedSensors.light_ok;
   ok["ir"]       = sharedSensors.ir_ok;
-  char buf[384]; serializeJson(doc, buf);
+  char buf[512]; serializeJson(doc, buf);
   mqtt.publish(TOPIC_DATA[zone], buf);
   lastServerContact = millis();
 }
@@ -463,9 +648,9 @@ void setup() {
 
   Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 #if TEST_MODE
-  Serial.println("ESP32 Plant Monitor v4.0 — TEST MODE");
+  Serial.println("ESP32 Plant Monitor v4.1 — TEST MODE");
 #else
-  Serial.println("ESP32 Plant Monitor v4.0 — Mesh Mode");
+  Serial.println("ESP32 Plant Monitor v4.1 — Mesh Mode");
 #endif
   Serial.printf("Site: %s   Zones: %d\n", SITE_ID, NUM_ZONES);
   for (int z = 0; z < NUM_ZONES; z++)
@@ -476,9 +661,18 @@ void setup() {
   for (int z = 0; z < NUM_ZONES; z++) {
     pinMode(RELAY_PINS[z], OUTPUT);
     digitalWrite(RELAY_PINS[z], LOW);
-    isWatering[z] = false; wateringStartTime[z] = 0;
-    lastWateringTime[z] = 0; currentDripDuration[z] = BASE_DRIP_MS;
-    lastMoisture[z] = 50;
+    isWatering[z]           = false;
+    wateringStartTime[z]    = 0;
+    lastWateringTime[z]     = 0;
+    currentDripDuration[z]  = BASE_DRIP_MS;
+    lastMoisture[z]         = 50;
+    moistureBeforeDrip[z]   = 0;
+    waitingForDripCheck[z]  = false;
+    dripCheckTime[z]        = 0;
+    dripHistoryCount[z]     = 0;
+    dripHistoryIdx[z]       = 0;
+    dripperFault[z]         = false;
+    for (int i = 0; i < DRIP_HISTORY_SIZE; i++) dripHistory[z][i] = 0;
   }
 
   Wire.begin(I2C_SDA, I2C_SCL);
@@ -486,6 +680,8 @@ void setup() {
   mlx.begin(); dht.begin();
   analogReadResolution(12); analogSetAttenuation(ADC_11db);
   initSD();
+
+  runBootSelfTest();
 
 #if !TEST_MODE
   for (int z = 0; z < NUM_ZONES; z++) {
@@ -513,6 +709,9 @@ void loop() {
 
   unsigned long now = millis();
 
+  // Check scheduled post-drip moisture readings
+  checkDripperPerformance();
+
   if (now - lastReadingTime >= READING_INTERVAL) {
     lastReadingTime = now;
     readSharedSensors();
@@ -531,8 +730,10 @@ void loop() {
       int moisture = readMoisture(z);
       lastMoisture[z] = moisture;
       OperatingMode mode = determineModeForZone(z);
-      Serial.printf("[%s]  moisture: %d%%  mode: %s  valve: %s\n",
-        ZONE_IDS[z], moisture, modeNames[mode], isWatering[z] ? "OPEN" : "closed");
+      Serial.printf("[%s]  moisture: %d%%  mode: %s  valve: %s  dripper: %s\n",
+        ZONE_IDS[z], moisture, modeNames[mode],
+        isWatering[z] ? "OPEN" : "closed",
+        dripperFault[z] ? "FAULT" : (dripHistoryCount[z] < DRIP_MIN_BASELINE ? "learning" : "ok"));
       logZoneToSD(z, moisture, mode);
 #if !TEST_MODE
       publishZone(z, moisture);

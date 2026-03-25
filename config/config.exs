@@ -28,6 +28,7 @@ config :nursery_hub, NurseryHub.Repo,
 # Generate a new one with:  mix phx.gen.secret
 # The current value is a safe default — regenerate before exposing to internet.
 config :nursery_hub, NurseryHubWeb.Endpoint,
+  adapter: Bandit.PhoenixAdapter,
   http: [ip: {0, 0, 0, 0}, port: 4000],
   secret_key_base: "Nx2mK9pL4rT7vY1aE6sH3uW8bQ0dF5gJ2nX4mK7pL9rT1vY3aE8sH6uW0bQ2dF4gJ5n",
   live_view: [signing_salt: "mK7pL9rT1vY3aE8sH6uW0bQ2"],

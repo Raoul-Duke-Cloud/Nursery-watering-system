@@ -26,7 +26,6 @@ defmodule NurseryHub.Application do
       {Phoenix.PubSub, name: NurseryHub.PubSub},
       {Registry, keys: :unique, name: NurseryHub.ZoneRegistry},
       {DynamicSupervisor, name: NurseryHub.ZoneSupervisor, strategy: :one_for_one},
-      {Tortoise311.Supervisor, []},
       {NurseryHub.MQTTConnector, [host: mqtt_host, port: mqtt_port]},
       NurseryHubWeb.Endpoint
     ]

@@ -6,9 +6,8 @@ defmodule NurseryHubWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
 
-    # Dashboard login — username and password set in config/config.exs
-    # Browser will show a login prompt before serving any page.
-    plug Plug.BasicAuth, Application.compile_env!(:nursery_hub, :dashboard_auth)
+    # Dashboard login disabled for local development
+    # Re-enable before deploying to VPS: plug Plug.BasicAuth, Application.compile_env!(:nursery_hub, :dashboard_auth)
 
     plug :put_root_layout, html: {NurseryHubWeb.Layouts, :root}
   end

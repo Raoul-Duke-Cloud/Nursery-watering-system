@@ -30,6 +30,13 @@ Install and run as a Windows service — it starts automatically on boot.
 
 Open a terminal in the nursery_hub folder, then run:
 
+**Note for Windows:** `mix` may not be in your PATH. Use the full path:
+```
+cmd /c '"C:\Program Files\Elixir\bin\mix.bat" setup'
+cmd /c '"C:\Program Files\Elixir\bin\mix.bat" run --no-halt'
+```
+
+Or add `C:\Program Files\Elixir\bin` to your system PATH, then:
 ```bash
 # Download dependencies + create the database
 mix setup

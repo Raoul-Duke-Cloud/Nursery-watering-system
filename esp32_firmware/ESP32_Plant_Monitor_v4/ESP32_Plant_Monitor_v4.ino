@@ -161,7 +161,7 @@ struct ZoneStatus {
 // STATE
 // ═══════════════════════════════════════════════════════════════════
 
-DHT               dht(DHT_PIN, DHT11);
+DHT               dht(DHT_PIN, DHT22);
 BH1750            lightMeter;
 Adafruit_MLX90614 mlx;
 

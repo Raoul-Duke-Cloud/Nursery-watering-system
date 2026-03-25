@@ -119,23 +119,55 @@ How to wire everything to the ESP32.
 ### Power overview
 
 ```
-  Power sources:
-  ┌──────────────────┐     ┌──────────────────┐
-  │  USB / 5V supply │     │  12V DC supply   │
-  │  powers ESP32    │     │  powers solenoid │
-  └────────┬─────────┘     └────────┬─────────┘
-           │                         │
-        ESP32                    Relay module
-        3.3V pin ──────────────▶ sensors
-        5V (VIN) ──────────────▶ relay module VCC
-        GND ─────────────────── relay GND ─── 12V GND
-                                 relay NO ───▶ solenoid +ve
-                                              solenoid -ve ── 12V GND
+  ┌─────────────────────────────────────────────────────────┐
+  │  Single input supply (e.g. 12V DC wall adapter or       │
+  │  LiPo/lead-acid battery)                                │
+  └────────────────────┬────────────────────────────────────┘
+                       │ 12V in
+              ┌────────▼────────┐
+              │  DC-DC Buck     │  step down to 5V
+              │  Converter      │  (e.g. LM2596 module)
+              └────────┬────────┘
+                       │ 5V out
+          ┌────────────┼──────────────────────┐
+          │            │                       │
+     ESP32 VIN    Relay module VCC      Solenoid valves
+     (powers      (5V coil relays)      (5V, via relay contacts)
+      ESP32 +
+      3.3V reg)
+
+  ESP32 3.3V pin ──┬──── DHT22 VCC        (via 1N4007)
+                   ├──── BH1750 VCC        (via 1N4007)
+                   ├──── MLX90614 VCC      (via 1N4007)
+                   ├──── SD module VCC     (via 1N4007)
+                   └──── Moisture sensors  (via 1N4007)
+
+  GND ─────────────────── relay GND ─── solenoid GND ─── DC-DC GND
 ```
 
-**Important:** The solenoid valve runs on 12V from its own supply.
-The ESP32 never connects to 12V. The relay acts as the switch between them.
-Use a normally-closed (NC) solenoid — fails safe (water off) if power is lost.
+**1N4007 reverse polarity protection:**
+Place one diode in series on the VCC wire of each sensor.
+Anode toward ESP32 3.3V, cathode toward sensor VCC pin.
+Note: diodes drop ~0.7V, so sensors see ~2.6V — all sensors in this build
+operate correctly at this voltage.
+
+**DHT22 pull-up:**
+Place a 10kΩ resistor between the DHT22 VCC pin and its data pin.
+
+**Relay wiring (5V coil, 5V solenoid):**
+```
+  ESP32 GPIO ──▶ Relay IN pin   (control side — 3.3V signal is enough
+                                 for most 5V relay modules)
+                 Relay VCC ──── 5V (from DC-DC converter)
+                 Relay GND ──── GND
+                 Relay COM ──── 5V (from DC-DC converter)
+                 Relay NO  ──── Solenoid valve +ve
+                                Solenoid valve -ve ──── GND
+```
+
+When ESP32 pulls the relay pin HIGH, the relay closes, 5V flows through
+the solenoid, and the valve opens. When LOW, valve closes.
+Use a normally-closed (NC) solenoid — fails safe (water off) if power lost.
 
 ---
 
@@ -145,15 +177,17 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power is lost.
   ┌─────────────────────────────────────────────────────────────────┐
   │  SHARED SENSORS                                                  │
   │                                                                  │
-  │  DHT11 (air temp/humidity)                                       │
+  │  DHT22 (air temp/humidity)                                       │
   │    Signal  ──────────────────────────────────── GPIO27          │
-  │    VCC     ──────────────────────────────────── 3.3V            │
+  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
+  │    [10kΩ resistor between VCC and Signal pin]                    │
   │                                                                  │
-  │  BH1750 (light) + MLX90614 (leaf IR temp)    ← share I2C bus   │
+  │  BH1750/GY-302 (light) + MLX90614/GY-906 BAA (leaf IR temp)     │
+  │                                        ← share I2C bus          │
   │    SDA     ──────────────────────────────────── GPIO21          │
   │    SCL     ──────────────────────────────────── GPIO22          │
-  │    VCC     ──────────────────────────────────── 3.3V            │
+  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
   │                                                                  │
   │  MicroSD card module (SPI)                                       │
@@ -161,7 +195,7 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power is lost.
   │    MOSI    ──────────────────────────────────── GPIO23          │
   │    MISO    ──────────────────────────────────── GPIO19          │
   │    SCK     ──────────────────────────────────── GPIO18          │
-  │    VCC     ──────────────────────────────────── 3.3V            │
+  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
   ├─────────────────────────────────────────────────────────────────┤
   │  PER ZONE (repeat for each zone)                                 │
@@ -171,15 +205,15 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power is lost.
   │    Zone B signal ────────────────────────────── GPIO33 (ADC1)   │
   │    Zone C signal ────────────────────────────── GPIO34 (ADC1)   │
   │    Zone D signal ────────────────────────────── GPIO35 (ADC1)   │
-  │    VCC (all)    ─────────────────────────────── 3.3V            │
+  │    VCC (all)    ──── 1N4007 (one per sensor) ── 3.3V            │
   │    GND (all)    ─────────────────────────────── GND             │
   │                                                                  │
-  │  4-channel relay module                                          │
+  │  4-channel relay module (5V coil)                                │
   │    IN1 (zone A) ─────────────────────────────── GPIO25          │
   │    IN2 (zone B) ─────────────────────────────── GPIO26          │
   │    IN3 (zone C) ─────────────────────────────── GPIO13          │
   │    IN4 (zone D) ─────────────────────────────── GPIO14          │
-  │    VCC          ─────────────────────────────── 5V (VIN)        │
+  │    VCC          ─────────────────────────────── 5V (DC-DC out)  │
   │    GND          ─────────────────────────────── GND             │
   └─────────────────────────────────────────────────────────────────┘
 ```
@@ -202,12 +236,14 @@ Wire both sensors in parallel to GPIO21 and GPIO22.
 
 ```
   ESP32 GPIO ──▶ Relay IN pin
-                 Relay COM ──── 12V supply positive
-                 Relay NO  ──── Solenoid valve positive
-                                Solenoid valve negative ──── 12V GND
+                 Relay VCC ──── 5V (DC-DC converter out)
+                 Relay GND ──── GND
+                 Relay COM ──── 5V (DC-DC converter out)
+                 Relay NO  ──── Solenoid valve +ve
+                                Solenoid valve -ve ──── GND
 ```
 
-When ESP32 pulls the relay pin HIGH, the relay closes, 12V flows through
+When ESP32 pulls the relay pin HIGH, the relay closes, 5V flows through
 the solenoid, and the valve opens. When LOW, valve closes.
 
 ---
@@ -218,7 +254,7 @@ the solenoid, and the valve opens. When LOW, valve closes.
 | Item | Purpose | Approx cost |
 |---|---|---|
 | ESP32 dev board | Reads sensors, controls valves, sends data | ~$5–8 |
-| DHT11 | Air temp + humidity (shared) | ~$2 |
+| DHT22 | Air temp + humidity (shared) | ~$3 |
 | BH1750 (GY-302) | Light level (shared) | ~$3 |
 | MLX90614 (GY-906) | Leaf temperature IR (shared) | ~$8 |
 | MicroSD card module + card | Local backup logging | ~$3 |
@@ -228,12 +264,13 @@ the solenoid, and the valve opens. When LOW, valve closes.
 | Item | Purpose | Approx cost |
 |---|---|---|
 | Capacitive soil moisture sensor | Soil wetness | ~$3 |
-| 12V solenoid valve (normally closed) | Controls drip line | ~$10–15 |
+| 5V solenoid valve (normally closed) | Controls drip line | ~$8–12 |
 
 ### Per site
 | Item | Purpose | Approx cost |
 |---|---|---|
-| 12V DC power supply | Powers solenoid valves | ~$10–15 |
+| DC-DC buck converter (e.g. LM2596) | Steps input voltage down to 5V | ~$2 |
+| Input power supply (12V DC or battery) | Powers DC-DC converter | ~$10–15 |
 | 4G LTE router (GL.iNet or TP-Link) | Site internet, owned by you | ~$60–100 once |
 | IoT SIM card | Data (~50–100MB/month per site) | ~$5–15/month |
 

@@ -136,20 +136,25 @@ How to wire everything to the ESP32.
       ESP32 +
       3.3V reg)
 
-  ESP32 3.3V pin ──┬──── DHT22 VCC        (via 1N4007)
-                   ├──── BH1750 VCC        (via 1N4007)
-                   ├──── MLX90614 VCC      (via 1N4007)
-                   ├──── SD module VCC     (via 1N4007)
-                   └──── Moisture sensors  (via 1N4007)
+  ESP32 3.3V pin ──┬──── AO3401 ──── DHT22 VCC
+                   ├──── AO3401 ──── BH1750 VCC
+                   ├──── AO3401 ──── MLX90614 VCC
+                   ├──── AO3401 ──── SD module VCC
+                   └──── AO3401 ──── Moisture sensors (one per sensor)
 
   GND ─────────────────── relay GND ─── solenoid GND ─── DC-DC GND
 ```
 
-**1N4007 reverse polarity protection:**
-Place one diode in series on the VCC wire of each sensor.
-Anode toward ESP32 3.3V, cathode toward sensor VCC pin.
-Note: diodes drop ~0.7V, so sensors see ~2.6V — all sensors in this build
-operate correctly at this voltage.
+**AO3401 reverse polarity protection (SOT-23 package):**
+One AO3401 per sensor VCC line. Pin orientation (SOT-23):
+```
+  Pin 1 (Drain)  ──── Sensor VCC
+  Pin 2 (Gate)   ──── GND
+  Pin 3 (Source) ──── ESP32 3.3V
+```
+Gate tied to GND keeps the MOSFET on normally.
+If polarity is reversed, MOSFET switches off and blocks current.
+No voltage drop — sensors receive full 3.3V.
 
 **DHT22 pull-up:**
 Place a 10kΩ resistor between the DHT22 VCC pin and its data pin.
@@ -179,7 +184,7 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power lost.
   │                                                                  │
   │  DHT22 (air temp/humidity)                                       │
   │    Signal  ──────────────────────────────────── GPIO27          │
-  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
+  │    VCC     ──────── AO3401 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
   │    [10kΩ resistor between VCC and Signal pin]                    │
   │                                                                  │
@@ -187,7 +192,7 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power lost.
   │                                        ← share I2C bus          │
   │    SDA     ──────────────────────────────────── GPIO21          │
   │    SCL     ──────────────────────────────────── GPIO22          │
-  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
+  │    VCC     ──────── AO3401 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
   │                                                                  │
   │  MicroSD card module (SPI)                                       │
@@ -195,7 +200,7 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power lost.
   │    MOSI    ──────────────────────────────────── GPIO23          │
   │    MISO    ──────────────────────────────────── GPIO19          │
   │    SCK     ──────────────────────────────────── GPIO18          │
-  │    VCC     ──────── 1N4007 ──────────────────── 3.3V            │
+  │    VCC     ──────── AO3401 ──────────────────── 3.3V            │
   │    GND     ──────────────────────────────────── GND             │
   ├─────────────────────────────────────────────────────────────────┤
   │  PER ZONE (repeat for each zone)                                 │
@@ -205,7 +210,7 @@ Use a normally-closed (NC) solenoid — fails safe (water off) if power lost.
   │    Zone B signal ────────────────────────────── GPIO33 (ADC1)   │
   │    Zone C signal ────────────────────────────── GPIO34 (ADC1)   │
   │    Zone D signal ────────────────────────────── GPIO35 (ADC1)   │
-  │    VCC (all)    ──── 1N4007 (one per sensor) ── 3.3V            │
+  │    VCC (all)    ──── AO3401 (one per sensor) ── 3.3V            │
   │    GND (all)    ─────────────────────────────── GND             │
   │                                                                  │
   │  4-channel relay module (5V coil)                                │

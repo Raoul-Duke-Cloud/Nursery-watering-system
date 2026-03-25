@@ -6,17 +6,19 @@ defmodule NurseryHub.SensorReading do
   alias NurseryHub.Repo
 
   schema "sensor_readings" do
-    field :site_id,   :string
-    field :zone_id,   :string
-    field :moisture,  :integer
-    field :lux,       :float
-    field :leaf_temp, :float
-    field :air_temp,  :float
-    field :humidity,  :float
-    field :vpd,       :float
-    field :watering,  :boolean
-    field :mode,      :string
-    field :sensor_ok, :string    # stored as JSON string
+    field :site_id,          :string
+    field :zone_id,          :string
+    field :moisture,         :integer
+    field :lux,              :float
+    field :leaf_temp,        :float
+    field :air_temp,         :float
+    field :humidity,         :float
+    field :vpd,              :float
+    field :watering,         :boolean
+    field :mode,             :string
+    field :sensor_ok,        :string    # stored as JSON string
+    field :dripper_fault,    :boolean
+    field :dripper_baseline, :float
 
     timestamps(type: :utc_datetime)
   end
@@ -25,19 +27,22 @@ defmodule NurseryHub.SensorReading do
   def insert(site_id, zone_id, data) do
     %__MODULE__{}
     |> Ecto.Changeset.cast(%{
-      site_id:   site_id,
-      zone_id:   zone_id,
-      moisture:  data["moisture"],
-      lux:       data["lux"],
-      leaf_temp: data["leaf_temp"],
-      air_temp:  data["air_temp"],
-      humidity:  data["humidity"],
-      vpd:       data["vpd"],
-      watering:  data["watering"],
-      mode:      data["mode"],
-      sensor_ok: Jason.encode!(data["sensor_ok"] || %{})
+      site_id:          site_id,
+      zone_id:          zone_id,
+      moisture:         data["moisture"],
+      lux:              data["lux"],
+      leaf_temp:        data["leaf_temp"],
+      air_temp:         data["air_temp"],
+      humidity:         data["humidity"],
+      vpd:              data["vpd"],
+      watering:         data["watering"],
+      mode:             data["mode"],
+      sensor_ok:        Jason.encode!(data["sensor_ok"] || %{}),
+      dripper_fault:    data["dripper_fault"],
+      dripper_baseline: data["dripper_baseline"]
     }, [:site_id, :zone_id, :moisture, :lux, :leaf_temp, :air_temp,
-        :humidity, :vpd, :watering, :mode, :sensor_ok])
+        :humidity, :vpd, :watering, :mode, :sensor_ok,
+        :dripper_fault, :dripper_baseline])
     |> Repo.insert()
   end
 

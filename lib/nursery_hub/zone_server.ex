@@ -19,7 +19,7 @@ defmodule NurseryHub.ZoneServer do
   use GenServer
   require Logger
 
-  alias NurseryHub.{Alerting, ZoneSupervisor, SensorReading}
+  alias NurseryHub.{Alerting, ZoneSupervisor, SensorReading, WateringEvent}
 
   # How often to check for timeouts and stuck valves (every 60 seconds)
   @watchdog_interval_ms 60_000
@@ -29,18 +29,21 @@ defmodule NurseryHub.ZoneServer do
   defstruct [
     :site_id,
     :zone_id,
-    :last_seen,         # DateTime of last received message
+    :last_seen,              # DateTime of last received message
     :moisture,
     :lux,
     :leaf_temp,
     :air_temp,
     :humidity,
     :vpd,
-    :watering,          # true/false — is valve currently open?
-    :valve_open_since,  # DateTime when valve opened (nil if closed)
-    :mode,              # "normal" | "no_vpd" | "no_moisture" | "local"
+    :watering,               # true/false — is valve currently open?
+    :valve_open_since,       # DateTime when valve opened (nil if closed)
+    :mode,                   # "normal" | "no_vpd" | "no_moisture" | "local"
+    :current_event_id,       # DB id of the open watering event (nil if not watering)
+    :pending_check_event_id, # DB id of event waiting for post-drip moisture check
+    :valve_closed_at,        # DateTime valve closed — used to match post-drip readings
     sensor_ok: %{},
-    alerts: []          # list of active alert types
+    alerts: []               # list of active alert types
   ]
 
   # ── Public API ───────────────────────────────────────────────────────────
@@ -100,6 +103,7 @@ defmodule NurseryHub.ZoneServer do
   @impl true
   def handle_cast({:data, data}, state) do
     now = DateTime.utc_now()
+    watering_now = data["watering"] == true
 
     new_state = %{state |
       last_seen:   now,
@@ -109,22 +113,30 @@ defmodule NurseryHub.ZoneServer do
       air_temp:    data["air_temp"],
       humidity:    data["humidity"],
       vpd:         data["vpd"],
-      watering:    data["watering"] == true,
+      watering:    watering_now,
       mode:        data["mode"] || "unknown",
       sensor_ok:   data["sensor_ok"] || %{}
     }
 
-    # Track when valve opened (for stuck-open detection)
+    # Track valve transitions for stuck-open detection and watering events
     new_state = cond do
-      new_state.watering and is_nil(state.valve_open_since) ->
-        %{new_state | valve_open_since: now}
+      # Valve just opened
+      watering_now and is_nil(state.valve_open_since) ->
+        event_id = open_watering_event(state, data, now)
+        %{new_state | valve_open_since: now, current_event_id: event_id}
 
-      not new_state.watering ->
-        %{new_state | valve_open_since: nil}
+      # Valve just closed
+      not watering_now and not is_nil(state.valve_open_since) ->
+        close_watering_event(state, data, now)
+        %{new_state | valve_open_since: nil, current_event_id: nil,
+          pending_check_event_id: state.current_event_id, valve_closed_at: now}
 
       true ->
         new_state
     end
+
+    # Post-drip moisture check — update event with moisture_after if enough time has passed
+    new_state = maybe_record_moisture_after(new_state, data, now)
 
     new_state = new_state
       |> check_sensor_faults()
@@ -235,6 +247,59 @@ defmodule NurseryHub.ZoneServer do
       %{state | alerts: List.delete(state.alerts, :offline)}
     else
       state
+    end
+  end
+
+  # ── Watering event helpers ────────────────────────────────────────────────
+
+  defp open_watering_event(state, data, now) do
+    case WateringEvent.open(state.site_id, state.zone_id, %{
+      trigger:          data["trigger"] || "auto",
+      started_at:       now,
+      moisture_before:  state.moisture,
+      vpd_at_start:     state.vpd,
+      lux_at_start:     state.lux,
+      dripper_baseline: data["dripper_baseline"]
+    }) do
+      {:ok, event} -> event.id
+      {:error, _}  -> nil
+    end
+  end
+
+  defp close_watering_event(state, data, now) do
+    if state.current_event_id do
+      duration_ms = DateTime.diff(now, state.valve_open_since, :millisecond)
+      WateringEvent.close(state.current_event_id, %{
+        stopped_at:   now,
+        duration_ms:  duration_ms,
+        dripper_fault: data["dripper_fault"]
+      })
+    end
+  end
+
+  # After the valve closes, watch for the post-drip moisture reading.
+  # The ESP32 checks moisture ~2min after drip stops (DRIP_CHECK_DELAY).
+  # We accept any reading between 1-5 minutes after close as the result.
+  defp maybe_record_moisture_after(%{pending_check_event_id: nil} = state, _data, _now), do: state
+  defp maybe_record_moisture_after(state, data, now) do
+    seconds_since_close = DateTime.diff(now, state.valve_closed_at, :second)
+
+    if seconds_since_close >= 60 and seconds_since_close <= 300 and data["moisture"] do
+      WateringEvent.close(state.pending_check_event_id, %{
+        moisture_after: data["moisture"],
+        moisture_rise:  (data["moisture"] || 0) - (get_moisture_before(state.pending_check_event_id)),
+        dripper_fault:  data["dripper_fault"]
+      })
+      %{state | pending_check_event_id: nil, valve_closed_at: nil}
+    else
+      state
+    end
+  end
+
+  defp get_moisture_before(event_id) do
+    case NurseryHub.Repo.get(WateringEvent, event_id) do
+      nil   -> 0
+      event -> event.moisture_before || 0
     end
   end
 

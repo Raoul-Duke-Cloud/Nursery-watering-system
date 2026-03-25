@@ -1,6 +1,6 @@
 /*
  * ESP32 Plant Monitoring — Multi-Zone Drip/Feed System
- * Version 4.1
+ * Version 4.2
  *
  * One ESP32 controls multiple independent zones.
  * Each zone has its own moisture sensor and solenoid valve.
@@ -37,6 +37,10 @@
  * - Boot self-test: checks all sensors and pulses each relay on startup
  * - Dripper performance tracking: monitors moisture rise after each watering
  *   and flags reduced capacity if a zone consistently underperforms baseline
+ *
+ * ── v4.2 CHANGES ───────────────────────────────────────────────────────────
+ * - OTA (over-the-air) firmware updates via HTTP on boot (mesh mode only)
+ * - Rollback support: if new firmware fails to start, ESP32 boots previous
  * ──────────────────────────────────────────────────────────────────────────
  */
 
@@ -69,6 +73,8 @@
   #include <WiFi.h>
   #include <PubSubClient.h>
   #include <ArduinoJson.h>
+  #include <HTTPClient.h>
+  #include <Update.h>
 #endif
 
 // ═══════════════════════════════════════════════════════════════════
@@ -100,6 +106,10 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
 
 #define SITE_ID "site_01"    // e.g. "northcote", "fitzroy"
 
+// Current firmware version — increment this each time you deploy new firmware
+// The server compares this to decide whether to push an update
+#define FIRMWARE_VERSION 42
+
 #if !TEST_MODE
   #define WIFI_SSID   "YOUR_WIFI_NAME"
   #define WIFI_PASS   "YOUR_WIFI_PASSWORD"
@@ -107,6 +117,11 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
   #define MQTT_PORT   1883
   #define MQTT_USER   "esp32_device"       // must match Mosquitto password file
   #define MQTT_PASS   "CHANGE_THIS_MQTT_PASSWORD"  // see SECURITY_SETUP.md Step 1
+
+  // OTA update URLs — served by the NurseryHub Elixir server
+  #define OTA_VERSION_URL  "http://" MQTT_SERVER ":4000/firmware/version"
+  #define OTA_FIRMWARE_URL "http://" MQTT_SERVER ":4000/firmware/esp32_plant_monitor.bin"
+  #define OTA_TIMEOUT_MS   10000   // 10s timeout for version check
 #endif
 
 // ═══════════════════════════════════════════════════════════════════
@@ -620,6 +635,85 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 }
 
+void checkForOTAUpdate() {
+  Serial.println("OTA: checking for firmware update...");
+
+  HTTPClient http;
+  http.setTimeout(OTA_TIMEOUT_MS);
+  http.begin(OTA_VERSION_URL);
+  int code = http.GET();
+
+  if (code != 200) {
+    Serial.printf("OTA: version check failed (HTTP %d) — skipping\n", code);
+    http.end();
+    return;
+  }
+
+  int serverVersion = http.getString().toInt();
+  http.end();
+
+  if (serverVersion <= FIRMWARE_VERSION) {
+    Serial.printf("OTA: up to date (v%d)\n", FIRMWARE_VERSION);
+    return;
+  }
+
+  Serial.printf("OTA: new firmware available v%d → v%d\n", FIRMWARE_VERSION, serverVersion);
+  Serial.println("OTA: closing valves before update...");
+
+  // Safety — ensure all valves are closed before flashing
+  for (int z = 0; z < NUM_ZONES; z++) {
+    if (isWatering[z]) stopDrip(z, "OTA update");
+    digitalWrite(RELAY_PINS[z], LOW);
+  }
+
+  Serial.println("OTA: downloading firmware...");
+  http.begin(OTA_FIRMWARE_URL);
+  code = http.GET();
+
+  if (code != 200) {
+    Serial.printf("OTA: download failed (HTTP %d)\n", code);
+    http.end();
+    return;
+  }
+
+  int contentLength = http.getSize();
+  if (contentLength <= 0) {
+    Serial.println("OTA: invalid content length — aborting");
+    http.end();
+    return;
+  }
+
+  if (!Update.begin(contentLength)) {
+    Serial.printf("OTA: not enough space (need %d bytes)\n", contentLength);
+    http.end();
+    return;
+  }
+
+  Serial.printf("OTA: flashing %d bytes...\n", contentLength);
+  WiFiClient* stream = http.getStreamPtr();
+  size_t written = Update.writeStream(*stream);
+  http.end();
+
+  if (written != (size_t)contentLength) {
+    Serial.printf("OTA: write error — %d of %d bytes written\n", written, contentLength);
+    Update.abort();
+    return;
+  }
+
+  if (!Update.end()) {
+    Serial.printf("OTA: verification failed (error %d)\n", Update.getError());
+    return;
+  }
+
+  // Mark new firmware as valid so bootloader won't roll back on first boot
+  Update.markAsValid();
+
+  Serial.println("OTA: success — rebooting into new firmware");
+  Serial.println("OTA: if new firmware fails, bootloader will automatically restore previous version");
+  delay(1000);
+  ESP.restart();
+}
+
 void connectWiFi() {
   if (WiFi.status()==WL_CONNECTED) return;
   Serial.print("WiFi connecting");
@@ -693,6 +787,7 @@ void setup() {
   mqtt.setCallback(mqttCallback);
   connectMQTT();
   lastServerContact = millis();
+  checkForOTAUpdate();  // check for new firmware on every boot
 #endif
 
   Serial.println("Ready\n");

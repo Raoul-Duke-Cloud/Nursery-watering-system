@@ -19,4 +19,10 @@ defmodule NurseryHubWeb.Router do
     live "/site/:site_id",          DashboardLive, :site
     live "/zone/:site_id/:zone_id", ZoneLive,      :detail
   end
+
+  # OTA firmware endpoints — no auth, accessed directly by ESP32s
+  scope "/firmware", NurseryHubWeb do
+    get "/version",                  FirmwareController, :version
+    get "/esp32_plant_monitor.bin",  FirmwareController, :binary
+  end
 end

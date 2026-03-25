@@ -1,5 +1,10 @@
 import Config
 
+# ── OTA Firmware ──────────────────────────────────────────────────────────────
+# Increment this when you deploy new firmware.
+# ESP32s compare their FIRMWARE_VERSION define against this on every boot.
+config :nursery_hub, :firmware_version, 42
+
 # ── MQTT ──────────────────────────────────────────────────────────────────────
 # Credentials must match the Mosquitto password file.
 # See SECURITY_SETUP.md for how to create the Mosquitto password file.

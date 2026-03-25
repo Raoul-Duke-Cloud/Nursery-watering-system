@@ -95,7 +95,7 @@ YOUR OFFICE / HOME
   ESP32 #1 (site_01)
   ┌─────────────────────────────────────────────┐
   │  Shared sensors (one reading for all zones)  │
-  │  ├── DHT11       air temp + humidity         │
+  │  ├── DHT22       air temp + humidity         │
   │  ├── BH1750      light level                 │
   │  └── MLX90614    leaf temperature (IR)       │
   │                                              │
@@ -374,20 +374,32 @@ Zone cards appear automatically as each ESP32 connects for the first time.
 
 ## Testing order (recommended)
 
-1. **One ESP32, TEST_MODE true** — USB only, Serial Monitor open.
+1. **Boot self-test** — plug ESP32 in via USB, open Serial Monitor (115200 baud).
+   On startup you will see a self-test report:
+   - Each shared sensor (DHT22, BH1750, MLX90614) — pass/fail with readings
+   - Each moisture sensor — raw ADC value and percentage
+   - Each relay — pulses 500ms (listen for click)
+   - SD card — present or not
+
+2. **One ESP32, TEST_MODE true** — USB only, Serial Monitor open.
    Confirm all shared sensors read. Confirm each zone's moisture reads
    independently. Watch each valve open and close. Read the VPD decision log.
+   Dripper status shows as `learning` until 3 watering events have been recorded.
 
-2. **Flip to mesh mode** — `TEST_MODE false`, start Elixir app, confirm all zones
+3. **Flip to mesh mode** — `TEST_MODE false`, start Elixir app, confirm all zones
    appear in dashboard and update every 30 seconds.
 
-3. **Test shared sensor fault** — unplug DHT11. All zones on that ESP32 should
+4. **Test shared sensor fault** — unplug DHT22. All zones on that ESP32 should
    drop to `no_vpd` mode (shared sensor affects all zones on the board).
 
-4. **Test per-zone fault** — unplug one moisture sensor. Only that zone should
+5. **Test per-zone fault** — unplug one moisture sensor. Only that zone should
    drop to `no_moisture` mode. Other zones on the same ESP32 unaffected.
 
-5. **Add more ESP32s** — they register in the dashboard automatically.
+6. **Test OTA update** — increment `firmware_version` in `config/config.exs`,
+   place a compiled `.bin` in `priv/static/firmware/`, restart NurseryHub.
+   Reboot the ESP32 — it should download and flash the new firmware automatically.
+
+7. **Add more ESP32s** — they register in the dashboard automatically.
 
 ---
 
@@ -399,6 +411,21 @@ Zone cards appear automatically as each ESP32 connects for the first time.
 - Click **Water now** for a manual 15-second drip on any zone
 - Database at `priv/nursery_hub.db` — open with **DB Browser for SQLite**
   (free download) to query or export to Excel
+
+## Deploying firmware updates (OTA)
+
+Once ESP32s are deployed at sites, update firmware without physical access:
+
+1. Make changes to the `.ino` file
+2. Increment `FIRMWARE_VERSION` in the firmware (e.g. 42 → 43)
+3. Arduino IDE → **Sketch → Export Compiled Binary** — saves a `.bin` file
+4. Copy the `.bin` to `priv/static/firmware/esp32_plant_monitor.bin` on your server
+5. Increment `firmware_version` in `config/config.exs` to match
+6. Restart NurseryHub
+7. Each ESP32 checks for updates on next boot and flashes automatically
+
+**Rollback:** if new firmware crashes on boot, the ESP32 bootloader automatically
+restores the previous version. No manual intervention needed.
 
 ---
 

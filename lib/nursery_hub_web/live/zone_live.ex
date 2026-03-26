@@ -16,7 +16,10 @@ defmodule NurseryHubWeb.ZoneLive do
     readings = SensorReading.range(site_id, zone_id, from_dt, to_dt)
     events   = WateringEvent.range(site_id, zone_id, from_dt, to_dt) |> Consumption.annotate()
     {total_litres, total_wh} = Consumption.totals(events)
-    current  = ZoneServer.state(site_id, zone_id)
+    current  = case ZoneServer.state(site_id, zone_id) do
+      state when is_struct(state) -> state
+      _                           -> nil
+    end
 
     {:ok, assign(socket,
       site_id:      site_id,
@@ -170,14 +173,10 @@ defmodule NurseryHubWeb.ZoneLive do
             </button>
           </form>
 
-          <div class="ml-auto flex gap-2">
-            <a href={"/csv/#{@site_id}/#{@zone_id}?from=#{@date_from}&to=#{@date_to}"}
+          <div class="ml-auto">
+            <a href={"/csv/#{@site_id}/#{@zone_id}/combined?from=#{@date_from}&to=#{@date_to}"}
               class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
-              ↓ Readings CSV
-            </a>
-            <a href={"/csv/#{@site_id}/#{@zone_id}/events?from=#{@date_from}&to=#{@date_to}"}
-              class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
-              ↓ Events CSV
+              ↓ Download CSV
             </a>
           </div>
 

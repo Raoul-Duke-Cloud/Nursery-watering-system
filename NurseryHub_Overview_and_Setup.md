@@ -378,7 +378,7 @@ cmd /c "C:\Program Files\Elixir\bin\mix.bat" run -e ":timer.sleep(:infinity)"
 
 Open browser → **http://localhost:4000**
 
-Zone cards appear automatically as each ESP32 connects for the first time.
+Zones appear in the dashboard table automatically as each ESP32 connects for the first time.
 
 > **Note — PowerShell script policy:** If `mix` gives a "running scripts is disabled" error,
 > always use the full `cmd /c "C:\Program Files\Elixir\bin\mix.bat" ...` form above.
@@ -436,7 +436,18 @@ Each row shows: status indicator, site, zone, moisture (with bar), air temp, VPD
 
 - Click **Water** to send a manual 15-second drip command to that zone
 - Click **Stop** to send an immediate stop command
-- Click **History** to open the zone history page — moisture + VPD charts with date range selection and CSV export
+- Click **History** to open the zone history page — moisture + VPD charts with date range selection and CSV export. Watering events (when the valve opened, what triggered it, duration, before/after moisture %) are shown in a table above the sensor readings.
+
+### Alert Log
+
+Go to **http://localhost:4000/logs** (or click **Alert Log** in the dashboard header).
+
+Shows every alert that has fired, newest first. Use the **Show** filter to see:
+- **All alerts** — full history
+- **Active only** — alerts not yet resolved (e.g. zones still offline)
+- **Resolved only** — alerts that have cleared
+
+Each row shows the time, site, zone, alert type (colour-coded badge), detail, and status. Settings saves are also recorded here so you have a full audit trail of configuration changes.
 
 ## Testing the dashboard without hardware (simulator)
 
@@ -466,6 +477,12 @@ Go to **http://localhost:4000/settings** (or click ⚙ Settings on the dashboard
 | OTA Firmware | Current firmware version number for ESP32 OTA updates |
 
 Email and SMS delivery are fully active. Fill in your credentials, enable the toggle, and save — alerts will be sent immediately from that point on.
+
+**All saves require the settings password** configured in `config/config.exs` (`settings_password`). If the password is not set, saves are unrestricted (development mode) and a warning banner is shown. Set it before going live.
+
+Each save form has a **Send test email** / **Send test SMS** button to verify your credentials work before relying on them for real alerts.
+
+All settings saves are recorded in the Alert Log with non-sensitive fields (SMTP host, addresses, routing choices) — no passwords or tokens are ever logged.
 
 **Alert types and default routing:**
 
@@ -505,6 +522,7 @@ and the steps required before going live.
 |---|---|
 | MQTT username + password | `config/config.exs` + Mosquitto password file |
 | Dashboard login (BasicAuth) | `router.ex` — prompts for username/password |
+| Settings page password | `config/config.exs` `settings_password` — required to save any settings |
 | Phoenix signed sessions | `config/config.exs` secret_key_base |
 | Valve safety timeout | ESP32 firmware — forces close after 60s regardless |
 | Valve stuck-open detection | Elixir zone_server — sends stop command + alerts |
@@ -516,11 +534,12 @@ and the steps required before going live.
 2. **Update** `mqtt_password` in `config/config.exs` to match
 3. **Update** `MQTT_PASS` in ESP32 firmware to match
 4. **Change** `dashboard_auth` password in `config/config.exs`
-5. **Regenerate** `secret_key_base` with `mix phx.gen.secret`
+5. **Set** `settings_password` in `config/config.exs` (controls who can save system settings)
+6. **Regenerate** `secret_key_base` with `mix phx.gen.secret`
 
 ### Recommended (before connecting remote sites)
 
-6. **Set up WireGuard VPN** between each site's 4G router and your server so MQTT traffic is encrypted end-to-end and the broker is never exposed to the open internet
+7. **Set up WireGuard VPN** between each site's 4G router and your server so MQTT traffic is encrypted end-to-end and the broker is never exposed to the open internet
 
 Full instructions: **`SECURITY_SETUP.md`**
 

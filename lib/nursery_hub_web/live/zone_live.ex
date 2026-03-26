@@ -170,10 +170,14 @@ defmodule NurseryHubWeb.ZoneLive do
             </button>
           </form>
 
-          <div class="ml-auto">
+          <div class="ml-auto flex gap-2">
             <a href={"/csv/#{@site_id}/#{@zone_id}?from=#{@date_from}&to=#{@date_to}"}
               class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
-              ↓ Download CSV
+              ↓ Readings CSV
+            </a>
+            <a href={"/csv/#{@site_id}/#{@zone_id}/events?from=#{@date_from}&to=#{@date_to}"}
+              class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
+              ↓ Events CSV
             </a>
           </div>
 

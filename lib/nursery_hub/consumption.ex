@@ -68,7 +68,7 @@ defmodule NurseryHub.Consumption do
   defp estimate_wh(duration_ms, watts),
     do: Float.round(duration_ms / 3_600_000 * watts, 2)
 
-  defp sum_floats(list), do: list |> Enum.reject(&is_nil/1) |> Enum.sum()
+  defp sum_floats(list), do: list |> Enum.reject(&is_nil/1) |> Enum.reduce(0.0, &+/2)
 
   defp parse_float(str, default) do
     case Float.parse(to_string(str)) do

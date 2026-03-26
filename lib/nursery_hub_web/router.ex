@@ -24,7 +24,9 @@ defmodule NurseryHubWeb.Router do
     live "/settings",               SettingsLive,  :index
     live "/logs",                   LogsLive,      :index
 
-    get "/csv/:site_id/:zone_id",   CsvController, :download
+    get "/csv/:site_id/:zone_id",        CsvController, :download
+    get "/csv/:site_id/:zone_id/events", CsvController, :download_events
+    get "/csv/logs",                     CsvController, :download_logs
   end
 
   # OTA firmware endpoints — no auth, accessed directly by ESP32s

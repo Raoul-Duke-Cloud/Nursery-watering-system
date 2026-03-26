@@ -30,7 +30,13 @@ defmodule NurseryHubWeb.LogsLive do
 
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-white">Alert Log</h1>
-        <span class="text-sm text-gray-500"><%= length(@logs) %> entries</span>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-500"><%= length(@logs) %> entries</span>
+          <a href="/csv/logs"
+            class="text-xs bg-green-800 hover:bg-green-700 text-green-300 px-3 py-1.5 rounded">
+            ↓ Download CSV
+          </a>
+        </div>
       </div>
 
       <%!-- Filter --%>

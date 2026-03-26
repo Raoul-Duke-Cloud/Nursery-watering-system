@@ -108,12 +108,14 @@ defmodule NurseryHubWeb.LogsLive do
   defp alert_label("valve_stuck_open"), do: "Valve stuck open"
   defp alert_label("sensor_fault"),     do: "Sensor fault"
   defp alert_label("critical_dry"),     do: "Critically dry"
+  defp alert_label("settings_changed"), do: "Settings saved"
   defp alert_label(other),              do: other
 
   defp alert_badge_class("valve_stuck_open"), do: "bg-red-900/60 text-red-300"
   defp alert_badge_class("critical_dry"),     do: "bg-red-900/60 text-red-300"
   defp alert_badge_class("zone_offline"),     do: "bg-orange-900/60 text-orange-300"
   defp alert_badge_class("sensor_fault"),     do: "bg-yellow-900/60 text-yellow-300"
+  defp alert_badge_class("settings_changed"), do: "bg-blue-900/60 text-blue-300"
   defp alert_badge_class(_),                  do: "bg-gray-700 text-gray-300"
 
   defp format_detail(nil), do: ""

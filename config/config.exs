@@ -16,6 +16,11 @@ config :nursery_hub,
   zone_timeout_minutes:  30,
   valve_max_open_seconds: 120
 
+# ── Settings page password ────────────────────────────────────────────────────
+# Required to save any changes on the Settings page.
+# Change this before going live. Stored here alongside all other credentials.
+config :nursery_hub, :settings_password, "CHANGE_THIS_SETTINGS_PASSWORD"
+
 # ── Dashboard login ────────────────────────────────────────────────────────────
 # Username and password for the web dashboard.
 # Change these before making the server accessible on your network.

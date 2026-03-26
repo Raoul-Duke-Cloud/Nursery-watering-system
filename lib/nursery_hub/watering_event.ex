@@ -65,6 +65,16 @@ defmodule NurseryHub.WateringEvent do
     |> Repo.all()
   end
 
+  @doc "All watering events for a zone between two DateTimes, most recent first."
+  def range(site_id, zone_id, from_dt, to_dt) do
+    from(e in __MODULE__,
+      where: e.site_id == ^site_id and e.zone_id == ^zone_id
+         and e.started_at >= ^from_dt and e.started_at <= ^to_dt,
+      order_by: [desc: e.started_at]
+    )
+    |> Repo.all()
+  end
+
   @doc "All completed events for a zone — for ML export."
   def completed(site_id, zone_id) do
     from(e in __MODULE__,

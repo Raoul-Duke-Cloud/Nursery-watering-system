@@ -16,10 +16,6 @@ defmodule Mix.Tasks.Sim do
   use Mix.Task
   import Bitwise
 
-  @host      "localhost"
-  @port      1883
-  @username  "nursery_hub"
-  @password  "CHANGE_THIS_MQTT_PASSWORD"
   @client_id "nursery_sim"
 
   @sites [
@@ -54,17 +50,20 @@ defmodule Mix.Tasks.Sim do
   # ── MQTT connection ────────────────────────────────────────────────────────
 
   defp connect do
-    {:ok, socket} = :gen_tcp.connect(~c"#{@host}", @port, [:binary, active: false])
-    send_connect(socket)
+    host     = Application.get_env(:nursery_hub, :mqtt_host,     "localhost")
+    port     = Application.get_env(:nursery_hub, :mqtt_port,     1883)
+    username = Application.get_env(:nursery_hub, :mqtt_username, "nursery_hub")
+    password = Application.get_env(:nursery_hub, :mqtt_password, "")
+
+    {:ok, socket} = :gen_tcp.connect(String.to_charlist(host), port, [:binary, active: false])
+    send_connect(socket, username, password)
     {:ok, _connack} = :gen_tcp.recv(socket, 0, 5000)
     IO.puts("MQTT connected as #{@client_id}")
     {:ok, socket}
   end
 
-  defp send_connect(socket) do
+  defp send_connect(socket, username, password) do
     client_id = @client_id
-    username  = @username
-    password  = @password
 
     client_id_len = byte_size(client_id)
     username_len  = byte_size(username)

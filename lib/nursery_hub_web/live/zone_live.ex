@@ -4,7 +4,7 @@ defmodule NurseryHubWeb.ZoneLive do
   """
 
   use Phoenix.LiveView
-  alias NurseryHub.{SensorReading, ZoneServer}
+  alias NurseryHub.{SensorReading, WateringEvent, ZoneServer}
 
   @impl true
   def mount(%{"site_id" => site_id, "zone_id" => zone_id}, _session, socket) do
@@ -14,12 +14,14 @@ defmodule NurseryHubWeb.ZoneLive do
 
     {from_dt, to_dt} = default_range()
     readings = SensorReading.range(site_id, zone_id, from_dt, to_dt)
+    events   = WateringEvent.range(site_id, zone_id, from_dt, to_dt)
     current  = ZoneServer.state(site_id, zone_id)
 
     {:ok, assign(socket,
       site_id:   site_id,
       zone_id:   zone_id,
       readings:  readings,
+      events:    events,
       current:   current,
       date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
       date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
@@ -41,8 +43,10 @@ defmodule NurseryHubWeb.ZoneLive do
     to_dt   = DateTime.utc_now()
     from_dt = DateTime.add(to_dt, -days * 86400, :second)
     readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
+    events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
     {:noreply, assign(socket,
       readings:  readings,
+      events:    events,
       date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
       date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
     )}
@@ -55,7 +59,8 @@ defmodule NurseryHubWeb.ZoneLive do
       from_dt = DateTime.new!(from_date, ~T[00:00:00], "Etc/UTC")
       to_dt   = DateTime.new!(to_date,   ~T[23:59:59], "Etc/UTC")
       readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
-      {:noreply, assign(socket, readings: readings, date_from: from_str, date_to: to_str)}
+      events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
+      {:noreply, assign(socket, readings: readings, events: events, date_from: from_str, date_to: to_str)}
     else
       _ -> {:noreply, socket}
     end
@@ -188,6 +193,59 @@ defmodule NurseryHubWeb.ZoneLive do
         </div>
       </div>
 
+      <%!-- Watering events table --%>
+      <%= if @events != [] do %>
+        <div class="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden mb-6">
+          <div class="px-4 py-3 border-b border-gray-700 text-sm font-medium text-gray-300">
+            Watering events (<%= length(@events) %>)
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-gray-400 text-xs border-b border-gray-800">
+                  <th class="px-4 py-2 text-left">Started</th>
+                  <th class="px-4 py-2 text-left">Trigger</th>
+                  <th class="px-4 py-2 text-right">Duration</th>
+                  <th class="px-4 py-2 text-right">Before</th>
+                  <th class="px-4 py-2 text-right">After</th>
+                  <th class="px-4 py-2 text-right">Rise</th>
+                  <th class="px-4 py-2 text-center">Dripper</th>
+                </tr>
+              </thead>
+              <tbody>
+                <%= for e <- @events do %>
+                  <tr class="border-b border-gray-800/50 hover:bg-gray-800/30">
+                    <td class="px-4 py-2 text-gray-400">
+                      <%= Calendar.strftime(e.started_at, "%d/%m %H:%M") %>
+                    </td>
+                    <td class="px-4 py-2 text-gray-300"><%= e.trigger %></td>
+                    <td class="px-4 py-2 text-right text-gray-300">
+                      <%= if e.duration_ms, do: "#{round(e.duration_ms / 1000)}s", else: "—" %>
+                    </td>
+                    <td class="px-4 py-2 text-right text-gray-300">
+                      <%= if e.moisture_before, do: "#{e.moisture_before}%", else: "—" %>
+                    </td>
+                    <td class="px-4 py-2 text-right text-gray-300">
+                      <%= if e.moisture_after, do: "#{e.moisture_after}%", else: "—" %>
+                    </td>
+                    <td class={"px-4 py-2 text-right font-medium " <> rise_class(e.moisture_rise)}>
+                      <%= if e.moisture_rise, do: "+#{e.moisture_rise}%", else: "—" %>
+                    </td>
+                    <td class="px-4 py-2 text-center text-xs">
+                      <%= if e.dripper_fault do %>
+                        <span class="text-red-400">Fault</span>
+                      <% else %>
+                        <span class="text-green-500">OK</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% end %>
+
       <%!-- Recent readings table --%>
       <div class="bg-gray-900 border border-gray-700 rounded-xl overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-700 text-sm font-medium text-gray-300">
@@ -290,6 +348,11 @@ defmodule NurseryHubWeb.ZoneLive do
 
   defp format_lux(v) when v >= 1000, do: "#{round(v / 1000)}k lux"
   defp format_lux(v),                do: "#{round(v)} lux"
+
+  defp rise_class(nil),                  do: "text-gray-400"
+  defp rise_class(n) when n < 5,        do: "text-red-400"
+  defp rise_class(n) when n < 15,       do: "text-yellow-400"
+  defp rise_class(_),                   do: "text-green-400"
 
   defp moisture_class(nil),              do: "text-gray-400"
   defp moisture_class(pct) when pct < 20, do: "text-red-400"

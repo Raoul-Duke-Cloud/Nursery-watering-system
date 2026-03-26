@@ -2,11 +2,11 @@ defmodule NurseryHubWeb.SettingsLive do
   @moduledoc "System settings page — alerts, OTA firmware."
 
   use Phoenix.LiveView
-  alias NurseryHub.Settings
+  alias NurseryHub.{Settings, Alerting}
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, settings: Settings.all(), saved: false, error: nil)}
+    {:ok, assign(socket, settings: Settings.all(), saved: false, error: nil, test_result: nil)}
   end
 
   @impl true
@@ -33,6 +33,26 @@ defmodule NurseryHubWeb.SettingsLive do
       "sms.to_number"    => params["to_number"]
     })
     {:noreply, assign(socket, settings: Settings.all(), saved: :sms, error: nil)}
+  end
+
+  @impl true
+  def handle_event("test_email", _params, socket) do
+    result = case Alerting.test_email() do
+      :ok              -> {:ok, "Test email sent successfully"}
+      {:error, :not_configured} -> {:error, "Email not fully configured — fill in all fields above"}
+      {:error, reason} -> {:error, "Send failed: #{inspect(reason)}"}
+    end
+    {:noreply, assign(socket, test_result: {:email, result})}
+  end
+
+  @impl true
+  def handle_event("test_sms", _params, socket) do
+    result = case Alerting.test_sms() do
+      :ok              -> {:ok, "Test SMS sent successfully"}
+      {:error, :not_configured} -> {:error, "SMS not fully configured — fill in all fields above"}
+      {:error, reason} -> {:error, "Send failed: #{inspect(reason)}"}
+    end
+    {:noreply, assign(socket, test_result: {:sms, result})}
   end
 
   @impl true
@@ -82,8 +102,15 @@ defmodule NurseryHubWeb.SettingsLive do
             placeholder="nursery@yourdomain.com" />
           <.field name="to"   label="To address"   value={@settings["email.to"]}
             placeholder="alerts@yourdomain.com" />
-          <.save_button />
+          <div class="flex items-center gap-3">
+            <.save_button />
+            <button type="button" phx-click="test_email"
+              class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg">
+              Send test email
+            </button>
+          </div>
         </form>
+        <.test_result result={@test_result} channel={:email} />
       </.section>
 
       <%!-- SMS alerts --%>
@@ -99,8 +126,15 @@ defmodule NurseryHubWeb.SettingsLive do
             placeholder="+61400000000" />
           <.field name="to_number"   label="To number"    value={@settings["sms.to_number"]}
             placeholder="+61400000000" />
-          <.save_button />
+          <div class="flex items-center gap-3">
+            <.save_button />
+            <button type="button" phx-click="test_sms"
+              class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg">
+              Send test SMS
+            </button>
+          </div>
         </form>
+        <.test_result result={@test_result} channel={:sms} />
       </.section>
 
       <%!-- Alert routing --%>
@@ -220,6 +254,18 @@ defmodule NurseryHubWeb.SettingsLive do
     </button>
     """
   end
+
+  defp test_result(%{result: {channel, _}} = assigns) when channel == assigns.channel do
+    ~H"""
+    <%= case @result do %>
+      <% {_ch, {:ok, msg}} -> %>
+        <p class="text-sm text-green-400 mt-2">✓ <%= msg %></p>
+      <% {_ch, {:error, msg}} -> %>
+        <p class="text-sm text-red-400 mt-2">✗ <%= msg %></p>
+    <% end %>
+    """
+  end
+  defp test_result(assigns), do: ~H""
 
   # ── Helpers ────────────────────────────────────────────────────────────────
 

@@ -19,7 +19,7 @@ defmodule NurseryHub.ZoneServer do
   use GenServer
   require Logger
 
-  alias NurseryHub.{Alerting, ZoneSupervisor, SensorReading, WateringEvent}
+  alias NurseryHub.{Alerting, AlertLog, ZoneSupervisor, SensorReading, WateringEvent}
 
   # How often to check for timeouts and stuck valves (every 60 seconds)
   @watchdog_interval_ms 60_000
@@ -43,7 +43,8 @@ defmodule NurseryHub.ZoneServer do
     :pending_check_event_id, # DB id of event waiting for post-drip moisture check
     :valve_closed_at,        # DateTime valve closed — used to match post-drip readings
     sensor_ok: %{},
-    alerts: []               # list of active alert types
+    alerts: [],              # list of active alert atoms
+    faulted_sensors: []      # sensors currently in fault — used to debounce sensor_fault alerts
   ]
 
   # ── Public API ───────────────────────────────────────────────────────────
@@ -211,20 +212,33 @@ defmodule NurseryHub.ZoneServer do
     end
   end
 
-  # One or more sensors reported as faulty
+  # One or more sensors reported as faulty — only alerts when the fault set changes
   defp check_sensor_faults(state) do
-    faults = state.sensor_ok
+    current_faults =
+      state.sensor_ok
       |> Enum.filter(fn {_sensor, ok} -> ok == false end)
       |> Enum.map(fn {sensor, _} -> sensor end)
+      |> Enum.sort()
 
-    if faults != [] do
-      Alerting.alert(:sensor_fault, state.site_id, state.zone_id, %{
-        failed_sensors: faults,
-        operating_mode: state.mode
-      })
+    prev_faults = Enum.sort(state.faulted_sensors)
+
+    cond do
+      # New faults or the set of faulted sensors has changed — alert
+      current_faults != [] and current_faults != prev_faults ->
+        Alerting.alert(:sensor_fault, state.site_id, state.zone_id, %{
+          failed_sensors: current_faults,
+          operating_mode: state.mode
+        })
+        new_alerts = [:sensor_fault | Enum.reject(state.alerts, &(&1 == :sensor_fault))]
+        %{state | faulted_sensors: current_faults, alerts: new_alerts}
+
+      # All sensors recovered — clear the fault
+      current_faults == [] and prev_faults != [] ->
+        %{state | faulted_sensors: [], alerts: Enum.reject(state.alerts, &(&1 == :sensor_fault))}
+
+      true ->
+        state
     end
-
-    state
   end
 
   # Moisture critically low — alert even if zone is in degraded mode
@@ -240,10 +254,11 @@ defmodule NurseryHub.ZoneServer do
     end
   end
 
-  # Zone came back online — clear the offline alert
+  # Zone came back online — clear the offline alert and mark it resolved in the log
   defp clear_offline_alert(state) do
     if :offline in state.alerts do
       Logger.info("[#{state.site_id}/#{state.zone_id}] Zone back online")
+      AlertLog.resolve(state.site_id, state.zone_id, :zone_offline)
       %{state | alerts: List.delete(state.alerts, :offline)}
     else
       state

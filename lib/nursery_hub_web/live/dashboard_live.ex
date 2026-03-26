@@ -88,6 +88,10 @@ defmodule NurseryHubWeb.DashboardLive do
             <div class="text-xs text-gray-500">Last update</div>
             <div class="text-sm text-gray-300"><%= format_time(@last_refresh) %></div>
           </div>
+          <a href="/logs"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg">
+            Alert Log
+          </a>
           <a href="/settings"
             class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg">
             ⚙ Settings
@@ -363,10 +367,11 @@ defmodule NurseryHubWeb.DashboardLive do
   defp moisture_bar_class(pct) when pct < 70, do: "bg-green-500"
   defp moisture_bar_class(_),                 do: "bg-blue-400"
 
-  defp alert_label(:offline),      do: "Offline"
-  defp alert_label(:valve_stuck),  do: "Valve stuck open"
-  defp alert_label(:critical_dry), do: "Critically dry"
-  defp alert_label(other),         do: to_string(other)
+  defp alert_label(:offline),       do: "Offline"
+  defp alert_label(:valve_stuck),   do: "Valve stuck open"
+  defp alert_label(:critical_dry),  do: "Critically dry"
+  defp alert_label(:sensor_fault),  do: "Sensor fault"
+  defp alert_label(other),          do: to_string(other)
 
   defp format_vpd(nil), do: nil
   defp format_vpd(v),   do: Float.round(v, 2)

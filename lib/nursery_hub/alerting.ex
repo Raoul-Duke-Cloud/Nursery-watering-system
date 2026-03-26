@@ -2,8 +2,8 @@ defmodule NurseryHub.Alerting do
   @moduledoc """
   Handles alerts from zone processes.
 
-  Reads delivery routing and credentials from Settings, then sends via
-  email (gen_smtp) and/or SMS (Twilio) as configured.
+  Every alert is written to the alert_logs table regardless of delivery method.
+  Delivery (email/SMS) is then routed based on Settings.
 
   Alert types:
     :zone_offline     — zone stopped sending data
@@ -13,13 +13,14 @@ defmodule NurseryHub.Alerting do
   """
 
   require Logger
-  alias NurseryHub.Settings
+  alias NurseryHub.{Settings, AlertLog}
 
   def alert(type, site_id, zone_id, detail) do
     subject = format_subject(type, site_id, zone_id)
     body    = format_body(type, site_id, zone_id, detail)
 
     log_alert(type, body)
+    AlertLog.log(site_id, zone_id, type, detail)
 
     delivery = Settings.alert_delivery(Atom.to_string(type))
 
@@ -30,6 +31,16 @@ defmodule NurseryHub.Alerting do
     if "sms" in delivery and Settings.enabled?("sms.enabled") do
       send_sms(body)
     end
+  end
+
+  @doc "Send a test email using current settings. Returns :ok or {:error, reason}."
+  def test_email do
+    send_email("[NurseryHub] Test alert", "This is a test alert from NurseryHub. Email delivery is working correctly.")
+  end
+
+  @doc "Send a test SMS using current settings. Returns :ok or {:error, reason}."
+  def test_sms do
+    send_sms("NurseryHub test alert — SMS delivery is working.")
   end
 
   # ── Formatting ─────────────────────────────────────────────────────────────
@@ -103,6 +114,7 @@ defmodule NurseryHub.Alerting do
 
     if Enum.any?([from, to, host, user, pass], &(&1 == "")) do
       Logger.warning("[Alerting] Email credentials incomplete — skipping email")
+      {:error, :not_configured}
     else
       message = build_mime(from, to, subject, body)
       opts = [relay: host, port: port, username: user, password: pass,
@@ -111,10 +123,13 @@ defmodule NurseryHub.Alerting do
       case :gen_smtp_client.send_blocking({from, [to], message}, opts) do
         {:ok, _receipt} ->
           Logger.info("[Alerting] Email sent to #{to}")
+          :ok
         {:error, reason, _detail} ->
           Logger.error("[Alerting] Email failed: #{inspect(reason)}")
+          {:error, reason}
         {:error, reason} ->
           Logger.error("[Alerting] Email failed: #{inspect(reason)}")
+          {:error, reason}
       end
     end
   end
@@ -140,6 +155,7 @@ defmodule NurseryHub.Alerting do
 
     if Enum.any?([sid, token, from, to], &(&1 == "")) do
       Logger.warning("[Alerting] SMS credentials incomplete — skipping SMS")
+      {:error, :not_configured}
     else
       url      = "https://api.twilio.com/2010-04-01/Accounts/#{sid}/Messages.json"
       sms_body = URI.encode_query(%{"From" => from, "To" => to, "Body" => String.slice(body, 0, 160)})
@@ -155,10 +171,13 @@ defmodule NurseryHub.Alerting do
       case :httpc.request(:post, request, [{:ssl, [{:verify, :verify_none}]}], []) do
         {:ok, {{_, status, _}, _headers, _resp}} when status in 200..299 ->
           Logger.info("[Alerting] SMS sent to #{to}")
+          :ok
         {:ok, {{_, status, _}, _headers, resp}} ->
           Logger.error("[Alerting] SMS failed (HTTP #{status}): #{resp}")
+          {:error, {:http_error, status}}
         {:error, reason} ->
           Logger.error("[Alerting] SMS failed: #{inspect(reason)}")
+          {:error, reason}
       end
     end
   end

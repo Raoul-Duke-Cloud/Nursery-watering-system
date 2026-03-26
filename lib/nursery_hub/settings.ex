@@ -58,7 +58,11 @@ defmodule NurseryHub.Settings do
     "alerts.critical_dry"     => "email,sms",
 
     # OTA
-    "ota.firmware_version"    => "42"
+    "ota.firmware_version"    => "42",
+
+    # Consumption estimates
+    "consumption.flow_rate_lph" => "2.0",
+    "consumption.valve_watts"   => "7.0"
   }
 
   # ── Public API ─────────────────────────────────────────────────────────────

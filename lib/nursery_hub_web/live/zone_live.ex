@@ -4,7 +4,7 @@ defmodule NurseryHubWeb.ZoneLive do
   """
 
   use Phoenix.LiveView
-  alias NurseryHub.{SensorReading, WateringEvent, ZoneServer}
+  alias NurseryHub.{SensorReading, WateringEvent, ZoneServer, Consumption}
 
   @impl true
   def mount(%{"site_id" => site_id, "zone_id" => zone_id}, _session, socket) do
@@ -14,17 +14,20 @@ defmodule NurseryHubWeb.ZoneLive do
 
     {from_dt, to_dt} = default_range()
     readings = SensorReading.range(site_id, zone_id, from_dt, to_dt)
-    events   = WateringEvent.range(site_id, zone_id, from_dt, to_dt)
+    events   = WateringEvent.range(site_id, zone_id, from_dt, to_dt) |> Consumption.annotate()
+    {total_litres, total_wh} = Consumption.totals(events)
     current  = ZoneServer.state(site_id, zone_id)
 
     {:ok, assign(socket,
-      site_id:   site_id,
-      zone_id:   zone_id,
-      readings:  readings,
-      events:    events,
-      current:   current,
-      date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
-      date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
+      site_id:      site_id,
+      zone_id:      zone_id,
+      readings:     readings,
+      events:       events,
+      current:      current,
+      total_litres: total_litres,
+      total_wh:     total_wh,
+      date_from:    Date.to_iso8601(DateTime.to_date(from_dt)),
+      date_to:      Date.to_iso8601(DateTime.to_date(to_dt))
     )}
   end
 
@@ -43,12 +46,15 @@ defmodule NurseryHubWeb.ZoneLive do
     to_dt   = DateTime.utc_now()
     from_dt = DateTime.add(to_dt, -days * 86400, :second)
     readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
-    events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
+    events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt) |> Consumption.annotate()
+    {total_litres, total_wh} = Consumption.totals(events)
     {:noreply, assign(socket,
-      readings:  readings,
-      events:    events,
-      date_from: Date.to_iso8601(DateTime.to_date(from_dt)),
-      date_to:   Date.to_iso8601(DateTime.to_date(to_dt))
+      readings:     readings,
+      events:       events,
+      total_litres: total_litres,
+      total_wh:     total_wh,
+      date_from:    Date.to_iso8601(DateTime.to_date(from_dt)),
+      date_to:      Date.to_iso8601(DateTime.to_date(to_dt))
     )}
   end
 
@@ -59,8 +65,16 @@ defmodule NurseryHubWeb.ZoneLive do
       from_dt = DateTime.new!(from_date, ~T[00:00:00], "Etc/UTC")
       to_dt   = DateTime.new!(to_date,   ~T[23:59:59], "Etc/UTC")
       readings = SensorReading.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
-      events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt)
-      {:noreply, assign(socket, readings: readings, events: events, date_from: from_str, date_to: to_str)}
+      events   = WateringEvent.range(socket.assigns.site_id, socket.assigns.zone_id, from_dt, to_dt) |> Consumption.annotate()
+      {total_litres, total_wh} = Consumption.totals(events)
+      {:noreply, assign(socket,
+        readings:     readings,
+        events:       events,
+        total_litres: total_litres,
+        total_wh:     total_wh,
+        date_from:    from_str,
+        date_to:      to_str
+      )}
     else
       _ -> {:noreply, socket}
     end
@@ -164,8 +178,13 @@ defmodule NurseryHubWeb.ZoneLive do
           </div>
 
         </div>
-        <div class="text-xs text-gray-500 mt-2">
-          <%= length(@readings) %> readings in selected range
+        <div class="flex flex-wrap gap-4 text-xs text-gray-500 mt-2">
+          <span><%= length(@readings) %> readings</span>
+          <%= if @events != [] do %>
+            <span><%= length(@events) %> watering events</span>
+            <span class="text-blue-400"><%= @total_litres %> L estimated</span>
+            <span class="text-yellow-600"><%= @total_wh %> Wh estimated</span>
+          <% end %>
         </div>
       </div>
 
@@ -209,6 +228,8 @@ defmodule NurseryHubWeb.ZoneLive do
                   <th class="px-4 py-2 text-right">Before</th>
                   <th class="px-4 py-2 text-right">After</th>
                   <th class="px-4 py-2 text-right">Rise</th>
+                  <th class="px-4 py-2 text-right">Water</th>
+                  <th class="px-4 py-2 text-right">Energy</th>
                   <th class="px-4 py-2 text-center">Dripper</th>
                 </tr>
               </thead>
@@ -231,6 +252,12 @@ defmodule NurseryHubWeb.ZoneLive do
                     <td class={"px-4 py-2 text-right font-medium " <> rise_class(e.moisture_rise)}>
                       <%= if e.moisture_rise, do: "+#{e.moisture_rise}%", else: "—" %>
                     </td>
+                    <td class="px-4 py-2 text-right text-blue-400 text-xs">
+                      <%= if e.estimated_litres, do: "#{e.estimated_litres} L", else: "—" %>
+                    </td>
+                    <td class="px-4 py-2 text-right text-yellow-600 text-xs">
+                      <%= if e.estimated_wh, do: "#{e.estimated_wh} Wh", else: "—" %>
+                    </td>
                     <td class="px-4 py-2 text-center text-xs">
                       <%= if e.dripper_fault do %>
                         <span class="text-red-400">Fault</span>
@@ -240,6 +267,16 @@ defmodule NurseryHubWeb.ZoneLive do
                     </td>
                   </tr>
                 <% end %>
+                <tr class="border-t border-gray-700 bg-gray-800/30">
+                  <td class="px-4 py-2 text-xs text-gray-500" colspan="6">Total (range)</td>
+                  <td class="px-4 py-2 text-right text-xs font-medium text-blue-400">
+                    <%= @total_litres %> L
+                  </td>
+                  <td class="px-4 py-2 text-right text-xs font-medium text-yellow-600">
+                    <%= @total_wh %> Wh
+                  </td>
+                  <td></td>
+                </tr>
               </tbody>
             </table>
           </div>

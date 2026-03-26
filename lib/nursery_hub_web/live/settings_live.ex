@@ -102,6 +102,26 @@ defmodule NurseryHubWeb.SettingsLive do
     end
   end
 
+  @impl true
+  def handle_event("save_consumption", params, socket) do
+    case check_password(params["settings_password"]) do
+      :ok ->
+        Settings.put_all(%{
+          "consumption.flow_rate_lph" => params["flow_rate_lph"],
+          "consumption.valve_watts"   => params["valve_watts"]
+        })
+        AlertLog.log("system", "settings", :settings_changed, %{
+          section:        "consumption",
+          flow_rate_lph:  params["flow_rate_lph"],
+          valve_watts:    params["valve_watts"]
+        })
+        {:noreply, assign(socket, settings: Settings.all(), saved: :consumption, error: nil)}
+
+      {:error, msg} ->
+        {:noreply, assign(socket, saved: nil, error: {:consumption, msg})}
+    end
+  end
+
   # ── Test handlers ───────────────────────────────────────────────────────────
 
   @impl true
@@ -227,6 +247,25 @@ defmodule NurseryHubWeb.SettingsLive do
           </table>
           <.password_field />
           <div class="mt-4"><.save_button /></div>
+        </form>
+      </.section>
+
+      <%!-- Consumption defaults --%>
+      <.section title="Consumption Defaults" saved={@saved == :consumption} error={@error} section={:consumption}>
+        <p class="text-sm text-gray-400 mb-4">
+          Used to estimate water and electricity use on the zone history page.
+          Set <strong class="text-gray-300">flow rate</strong> to the total dripper output for a
+          typical zone (e.g. 5 × 2 L/hr drippers = 10). Set
+          <strong class="text-gray-300">valve watts</strong> to your solenoid valve's rated draw
+          while open (typically 5–10 W).
+        </p>
+        <form phx-submit="save_consumption" class="space-y-4">
+          <.field name="flow_rate_lph" label="Dripper output per zone (L/hr)"
+            value={@settings["consumption.flow_rate_lph"]} placeholder="2.0" />
+          <.field name="valve_watts" label="Solenoid valve rated watts"
+            value={@settings["consumption.valve_watts"]} placeholder="7.0" />
+          <.password_field />
+          <.save_button />
         </form>
       </.section>
 

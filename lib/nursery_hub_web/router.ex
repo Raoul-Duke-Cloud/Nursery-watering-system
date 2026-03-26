@@ -24,6 +24,7 @@ defmodule NurseryHubWeb.Router do
     live "/settings",               SettingsLive,  :index
     live "/logs",                   LogsLive,      :index
 
+    get "/csv/dashboard",                CsvController, :download_dashboard
     get "/csv/:site_id/:zone_id",        CsvController, :download
     get "/csv/:site_id/:zone_id/events", CsvController, :download_events
     get "/csv/logs",                     CsvController, :download_logs

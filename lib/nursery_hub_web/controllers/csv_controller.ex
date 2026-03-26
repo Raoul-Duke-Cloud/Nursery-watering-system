@@ -1,7 +1,136 @@
 defmodule NurseryHubWeb.CsvController do
   use NurseryHubWeb, :controller
 
-  alias NurseryHub.{SensorReading, WateringEvent, AlertLog}
+  alias NurseryHub.{SensorReading, WateringEvent, AlertLog, ZoneSupervisor, ZoneServer}
+
+  # ── Dashboard snapshot CSV ─────────────────────────────────────────────────
+
+  def download_dashboard(conn, params) do
+    zones = load_all_zones()
+
+    filtered =
+      zones
+      |> filter_by_site(params["site"])
+      |> filter_by_zone(params["zone"])
+      |> filter_by_status(params["status"])
+      |> filter_by_mode(params["mode"])
+      |> filter_by_range(:moisture, params["moisture_min"], params["moisture_max"])
+      |> filter_by_range(:air_temp, params["temp_min"],     params["temp_max"])
+      |> filter_by_range(:vpd,      params["vpd_min"],      params["vpd_max"])
+      |> filter_by_range(:lux,      params["lux_min"],      params["lux_max"])
+      |> Enum.sort_by(&{&1.site_id, &1.zone_id})
+
+    header = "site,zone,status,moisture_%,air_temp_c,vpd_kpa,lux,mode,last_seen"
+
+    rows = Enum.map(filtered, fn z ->
+      [
+        z.site_id,
+        z.zone_id,
+        dashboard_zone_status(z),
+        z.moisture,
+        z.air_temp,
+        z.vpd && Float.round(z.vpd, 3),
+        z.lux && round(z.lux),
+        z.mode,
+        z.last_seen && Calendar.strftime(z.last_seen, "%Y-%m-%d %H:%M:%S")
+      ]
+      |> Enum.map(&if(is_nil(&1), do: "", else: to_string(&1)))
+      |> Enum.join(",")
+    end)
+
+    csv      = Enum.join([header | rows], "\n")
+    filename = "nursery_dashboard_#{Date.to_iso8601(Date.utc_today())}.csv"
+
+    conn
+    |> put_resp_content_type("text/csv")
+    |> put_resp_header("content-disposition", ~s(attachment; filename="#{filename}"))
+    |> send_resp(200, csv)
+  end
+
+  defp load_all_zones do
+    db_zones =
+      SensorReading.latest_per_zone()
+      |> Enum.reduce(%{}, fn reading, acc ->
+        zone = %ZoneServer{
+          site_id:   reading.site_id,
+          zone_id:   reading.zone_id,
+          last_seen: reading.inserted_at,
+          moisture:  reading.moisture,
+          lux:       reading.lux,
+          leaf_temp: reading.leaf_temp,
+          air_temp:  reading.air_temp,
+          humidity:  reading.humidity,
+          vpd:       reading.vpd,
+          watering:  false,
+          mode:      reading.mode || "unknown",
+          sensor_ok: %{},
+          alerts:    [:offline]
+        }
+        Map.put(acc, {zone.site_id, zone.zone_id}, zone)
+      end)
+
+    ZoneSupervisor.all_zones()
+    |> Enum.reduce(db_zones, fn {site_id, zone_id}, acc ->
+      case ZoneServer.state(site_id, zone_id) do
+        state when is_struct(state) -> Map.put(acc, {site_id, zone_id}, state)
+        _                           -> acc
+      end
+    end)
+    |> Map.values()
+  end
+
+  defp filter_by_site(zones, nil),    do: zones
+  defp filter_by_site(zones, "all"),  do: zones
+  defp filter_by_site(zones, site),   do: Enum.filter(zones, &(&1.site_id == site))
+
+  defp filter_by_zone(zones, nil),   do: zones
+  defp filter_by_zone(zones, ""),    do: zones
+  defp filter_by_zone(zones, query), do: Enum.filter(zones, &String.contains?(&1.zone_id, query))
+
+  defp filter_by_status(zones, nil),       do: zones
+  defp filter_by_status(zones, "all"),     do: zones
+  defp filter_by_status(zones, "online"),  do: Enum.filter(zones, &(:offline not in &1.alerts and not &1.watering))
+  defp filter_by_status(zones, "offline"), do: Enum.filter(zones, &(:offline in &1.alerts))
+  defp filter_by_status(zones, "watering"),do: Enum.filter(zones, & &1.watering)
+  defp filter_by_status(zones, "alert"),   do: Enum.filter(zones, &(&1.alerts != [] and :offline not in &1.alerts))
+  defp filter_by_status(zones, _),         do: zones
+
+  defp filter_by_mode(zones, nil),    do: zones
+  defp filter_by_mode(zones, "all"),  do: zones
+  defp filter_by_mode(zones, mode),   do: Enum.filter(zones, &(&1.mode == mode))
+
+  defp filter_by_range(zones, _field, nil, nil),  do: zones
+  defp filter_by_range(zones, _field, "",  ""),   do: zones
+  defp filter_by_range(zones, field, min_s, max_s) do
+    Enum.filter(zones, fn zone ->
+      val = Map.get(zone, field)
+      if is_nil(val) do
+        false
+      else
+        min_ok = is_nil(min_s) or min_s == "" or val >= parse_csv_number(min_s)
+        max_ok = is_nil(max_s) or max_s == "" or val <= parse_csv_number(max_s)
+        min_ok and max_ok
+      end
+    end)
+  end
+
+  defp parse_csv_number(s) do
+    case Float.parse(s) do
+      {f, _} -> f
+      :error -> 0.0
+    end
+  end
+
+  defp dashboard_zone_status(zone) do
+    cond do
+      :offline in zone.alerts -> "offline"
+      zone.watering            -> "watering"
+      zone.alerts != []        -> "alert"
+      true                     -> "online"
+    end
+  end
+
+  # ── Sensor readings CSV ────────────────────────────────────────────────────
 
   def download(conn, %{"site_id" => site_id, "zone_id" => zone_id} = params) do
     from_str = Map.get(params, "from", Date.to_iso8601(Date.add(Date.utc_today(), -7)))

@@ -61,6 +61,23 @@ Log in with the credentials set in `config/config.exs` under `dashboard_auth` (d
 
 Press **Ctrl+C** in the PowerShell window running the server.
 
+### If you've closed the PowerShell window (server still running in background)
+
+Open any terminal and run:
+
+```
+taskkill /IM beam.smp.exe /F
+```
+
+Or find it by port:
+
+```
+netstat -ano | findstr :4000
+taskkill /PID <pid> /F
+```
+
+Replace `<pid>` with the number shown in the first command. This is also the fix for the `:eaddrinuse` error — which means a previous server session is still occupying port 4000.
+
 ---
 
 ## Optional — run the simulator (no hardware needed)

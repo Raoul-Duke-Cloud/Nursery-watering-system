@@ -18,10 +18,20 @@ defmodule NurseryHubWeb.DashboardLive do
     end
 
     {:ok, assign(socket,
-      zones:         load_zones(),
-      last_refresh:  DateTime.utc_now(),
-      filter_site:   "all",
-      filter_status: "all"
+      zones:               load_zones(),
+      last_refresh:        DateTime.utc_now(),
+      filter_site:         "all",
+      filter_zone:         "",
+      filter_status:       "all",
+      filter_mode:         "all",
+      filter_moisture_min: "",
+      filter_moisture_max: "",
+      filter_temp_min:     "",
+      filter_temp_max:     "",
+      filter_vpd_min:      "",
+      filter_vpd_max:      "",
+      filter_lux_min:      "",
+      filter_lux_max:      ""
     )}
   end
 
@@ -46,8 +56,36 @@ defmodule NurseryHubWeb.DashboardLive do
   @impl true
   def handle_event("filter", params, socket) do
     {:noreply, assign(socket,
-      filter_site:   params["site"]   || "all",
-      filter_status: params["status"] || "all"
+      filter_site:         params["site"]         || "all",
+      filter_zone:         params["zone"]         || "",
+      filter_status:       params["status"]       || "all",
+      filter_mode:         params["mode"]         || "all",
+      filter_moisture_min: params["moisture_min"] || "",
+      filter_moisture_max: params["moisture_max"] || "",
+      filter_temp_min:     params["temp_min"]     || "",
+      filter_temp_max:     params["temp_max"]     || "",
+      filter_vpd_min:      params["vpd_min"]      || "",
+      filter_vpd_max:      params["vpd_max"]      || "",
+      filter_lux_min:      params["lux_min"]      || "",
+      filter_lux_max:      params["lux_max"]      || ""
+    )}
+  end
+
+  @impl true
+  def handle_event("clear_filters", _params, socket) do
+    {:noreply, assign(socket,
+      filter_site:         "all",
+      filter_zone:         "",
+      filter_status:       "all",
+      filter_mode:         "all",
+      filter_moisture_min: "",
+      filter_moisture_max: "",
+      filter_temp_min:     "",
+      filter_temp_max:     "",
+      filter_vpd_min:      "",
+      filter_vpd_max:      "",
+      filter_lux_min:      "",
+      filter_lux_max:      ""
     )}
   end
 
@@ -57,15 +95,15 @@ defmodule NurseryHubWeb.DashboardLive do
   def render(assigns) do
     all_zones   = Map.values(assigns.zones)
     sites       = all_zones |> Enum.map(& &1.site_id) |> Enum.uniq() |> Enum.sort()
-    filtered    = apply_filters(all_zones, assigns.filter_site, assigns.filter_status)
+    filtered    = apply_filters(all_zones, assigns)
     offline_ct  = Enum.count(all_zones, &(:offline in &1.alerts))
     alert_zones = Enum.filter(all_zones, &(&1.alerts != []))
 
     assigns = assign(assigns,
-      sites:      sites,
-      filtered:   filtered,
-      total:      length(all_zones),
-      offline_ct: offline_ct,
+      sites:       sites,
+      filtered:    filtered,
+      total:       length(all_zones),
+      offline_ct:  offline_ct,
       alert_zones: alert_zones
     )
 
@@ -113,32 +151,105 @@ defmodule NurseryHubWeb.DashboardLive do
       <% end %>
 
       <%!-- Filters --%>
-      <form phx-change="filter" class="flex flex-wrap items-center gap-4 mb-4">
-        <div class="flex items-center gap-2">
-          <label class="text-xs text-gray-500">Site</label>
-          <select name="site"
-            class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1.5">
-            <option value="all" selected={@filter_site == "all"}>All sites</option>
-            <%= for site <- @sites do %>
-              <option value={site} selected={@filter_site == site}><%= site %></option>
-            <% end %>
-          </select>
+      <form phx-change="filter" class="bg-gray-900 border border-gray-700 rounded-lg p-4 mb-4 space-y-3">
+
+        <%!-- Row 1: categorical filters --%>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500 w-8">Site</label>
+            <select name="site"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1">
+              <option value="all" selected={@filter_site == "all"}>All</option>
+              <%= for site <- @sites do %>
+                <option value={site} selected={@filter_site == site}><%= site %></option>
+              <% end %>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500 w-8">Zone</label>
+            <input type="text" name="zone" value={@filter_zone} placeholder="search…"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1 w-28" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500 w-10">Status</label>
+            <select name="status"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1">
+              <option value="all"      selected={@filter_status == "all"}>All</option>
+              <option value="online"   selected={@filter_status == "online"}>Online</option>
+              <option value="offline"  selected={@filter_status == "offline"}>Offline</option>
+              <option value="watering" selected={@filter_status == "watering"}>Watering</option>
+              <option value="alert"    selected={@filter_status == "alert"}>Alert</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500 w-8">Mode</label>
+            <select name="mode"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1">
+              <option value="all"         selected={@filter_mode == "all"}>All</option>
+              <option value="normal"      selected={@filter_mode == "normal"}>Normal</option>
+              <option value="local"       selected={@filter_mode == "local"}>Local</option>
+              <option value="no_vpd"      selected={@filter_mode == "no_vpd"}>No VPD</option>
+              <option value="no_moisture" selected={@filter_mode == "no_moisture"}>No moisture</option>
+            </select>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <label class="text-xs text-gray-500">Status</label>
-          <select name="status"
-            class="bg-gray-800 border border-gray-600 text-gray-200 text-sm rounded px-2 py-1.5">
-            <option value="all"     selected={@filter_status == "all"}>All</option>
-            <option value="online"  selected={@filter_status == "online"}>Online</option>
-            <option value="offline" selected={@filter_status == "offline"}>Offline</option>
-            <option value="alerts"  selected={@filter_status == "alerts"}>Alerts</option>
-          </select>
+
+        <%!-- Row 2: numeric range filters --%>
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500">Moisture %</label>
+            <input type="number" name="moisture_min" value={@filter_moisture_min} placeholder="min"
+              min="0" max="100"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+            <span class="text-gray-600 text-xs">–</span>
+            <input type="number" name="moisture_max" value={@filter_moisture_max} placeholder="max"
+              min="0" max="100"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500">Temp °C</label>
+            <input type="number" name="temp_min" value={@filter_temp_min} placeholder="min"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+            <span class="text-gray-600 text-xs">–</span>
+            <input type="number" name="temp_max" value={@filter_temp_max} placeholder="max"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500">VPD kPa</label>
+            <input type="number" name="vpd_min" value={@filter_vpd_min} placeholder="min"
+              step="0.01"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+            <span class="text-gray-600 text-xs">–</span>
+            <input type="number" name="vpd_max" value={@filter_vpd_max} placeholder="max"
+              step="0.01"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-16" />
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="text-xs text-gray-500">Lux</label>
+            <input type="number" name="lux_min" value={@filter_lux_min} placeholder="min"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-20" />
+            <span class="text-gray-600 text-xs">–</span>
+            <input type="number" name="lux_max" value={@filter_lux_max} placeholder="max"
+              class="bg-gray-800 border border-gray-600 text-gray-200 text-xs rounded px-2 py-1 w-20" />
+          </div>
         </div>
-        <%= if length(@filtered) != @total do %>
+
+        <%!-- Filter footer: count + clear + download --%>
+        <div class="flex items-center justify-between pt-1">
           <span class="text-xs text-gray-500">
-            Showing <%= length(@filtered) %> of <%= @total %>
+            Showing <%= length(@filtered) %> of <%= @total %> zones
           </span>
-        <% end %>
+          <div class="flex items-center gap-2">
+            <button type="button" phx-click="clear_filters"
+              class="text-xs text-gray-400 hover:text-gray-200 px-2 py-1 rounded border border-gray-700 hover:border-gray-500">
+              Clear filters
+            </button>
+            <a href={csv_url(assigns)}
+              class="text-xs bg-green-800 hover:bg-green-700 text-green-200 px-3 py-1 rounded">
+              ↓ Download CSV
+            </a>
+          </div>
+        </div>
       </form>
 
       <%!-- Empty state --%>
@@ -156,6 +267,7 @@ defmodule NurseryHubWeb.DashboardLive do
             <thead>
               <tr class="text-xs text-gray-500 border-b border-gray-700 uppercase tracking-wide">
                 <th class="text-left pb-2 pr-3 font-normal"></th>
+                <th class="text-left pb-2 pr-4 font-normal">Status</th>
                 <th class="text-left pb-2 pr-4 font-normal">Site</th>
                 <th class="text-left pb-2 pr-4 font-normal">Zone</th>
                 <th class="text-left pb-2 pr-6 font-normal">Moisture</th>
@@ -198,6 +310,13 @@ defmodule NurseryHubWeb.DashboardLive do
             <span class="text-blue-400 text-xs">💦</span>
           <% end %>
         </div>
+      </td>
+
+      <%!-- Status text --%>
+      <td class="py-3 pr-4">
+        <span class={"text-xs font-medium " <> status_text_class(@zone)}>
+          <%= zone_status(@zone) %>
+        </span>
       </td>
 
       <%!-- Site --%>
@@ -274,7 +393,6 @@ defmodule NurseryHubWeb.DashboardLive do
   # ── Data loading ───────────────────────────────────────────────────────────
 
   defp load_zones do
-    # Seed from DB — every zone ever seen starts as offline
     db_zones =
       SensorReading.latest_per_zone()
       |> Enum.reduce(%{}, fn reading, acc ->
@@ -282,7 +400,6 @@ defmodule NurseryHubWeb.DashboardLive do
         Map.put(acc, {zone.site_id, zone.zone_id}, zone)
       end)
 
-    # Overlay with live ZoneServer state — clears the :offline stub for active zones
     ZoneSupervisor.all_zones()
     |> Enum.reduce(db_zones, fn {site_id, zone_id}, acc ->
       case ZoneServer.state(site_id, zone_id) do
@@ -292,7 +409,6 @@ defmodule NurseryHubWeb.DashboardLive do
     end)
   end
 
-  # Build a ZoneServer-shaped struct from a DB reading so the table renders uniformly
   defp zone_from_reading(r) do
     %ZoneServer{
       site_id:   r.site_id,
@@ -313,25 +429,92 @@ defmodule NurseryHubWeb.DashboardLive do
 
   defp zone_key(zone), do: {zone.site_id, zone.zone_id}
 
-  defp apply_filters(zones, site_filter, status_filter) do
+  defp apply_filters(zones, assigns) do
     zones
     |> Enum.filter(fn zone ->
-      site_ok = site_filter == "all" or zone.site_id == site_filter
+      site_ok     = assigns.filter_site == "all" or zone.site_id == assigns.filter_site
+      zone_ok     = assigns.filter_zone == "" or String.contains?(zone.zone_id, assigns.filter_zone)
+      status_ok   = status_matches?(zone, assigns.filter_status)
+      mode_ok     = assigns.filter_mode == "all" or zone.mode == assigns.filter_mode
+      moisture_ok = range_matches?(zone.moisture,  assigns.filter_moisture_min, assigns.filter_moisture_max)
+      temp_ok     = range_matches?(zone.air_temp,  assigns.filter_temp_min,     assigns.filter_temp_max)
+      vpd_ok      = range_matches?(zone.vpd,       assigns.filter_vpd_min,      assigns.filter_vpd_max)
+      lux_ok      = range_matches?(zone.lux,       assigns.filter_lux_min,      assigns.filter_lux_max)
 
-      status_ok = case status_filter do
-        "all"     -> true
-        "online"  -> :offline not in zone.alerts
-        "offline" -> :offline in zone.alerts
-        "alerts"  -> zone.alerts != [] and :offline not in zone.alerts
-        _         -> true
-      end
-
-      site_ok and status_ok
+      site_ok and zone_ok and status_ok and mode_ok and moisture_ok and temp_ok and vpd_ok and lux_ok
     end)
     |> Enum.sort_by(&{&1.site_id, &1.zone_id})
   end
 
+  defp status_matches?(zone, filter) do
+    case filter do
+      "all"      -> true
+      "online"   -> :offline not in zone.alerts and not zone.watering
+      "offline"  -> :offline in zone.alerts
+      "watering" -> zone.watering
+      "alert"    -> zone.alerts != [] and :offline not in zone.alerts
+      _          -> true
+    end
+  end
+
+  defp range_matches?(_val, "", ""), do: true
+  defp range_matches?(nil, _min, _max), do: false
+  defp range_matches?(val, min_str, max_str) do
+    min_ok = min_str == "" or val >= parse_number(min_str)
+    max_ok = max_str == "" or val <= parse_number(max_str)
+    min_ok and max_ok
+  end
+
+  defp parse_number(s) do
+    case Float.parse(s) do
+      {f, _} -> f
+      :error -> 0.0
+    end
+  end
+
+  # ── CSV URL builder ────────────────────────────────────────────────────────
+
+  defp csv_url(assigns) do
+    params =
+      [
+        {"site",         assigns.filter_site},
+        {"zone",         assigns.filter_zone},
+        {"status",       assigns.filter_status},
+        {"mode",         assigns.filter_mode},
+        {"moisture_min", assigns.filter_moisture_min},
+        {"moisture_max", assigns.filter_moisture_max},
+        {"temp_min",     assigns.filter_temp_min},
+        {"temp_max",     assigns.filter_temp_max},
+        {"vpd_min",      assigns.filter_vpd_min},
+        {"vpd_max",      assigns.filter_vpd_max},
+        {"lux_min",      assigns.filter_lux_min},
+        {"lux_max",      assigns.filter_lux_max}
+      ]
+      |> Enum.reject(fn {_, v} -> v == "" or v == "all" end)
+      |> URI.encode_query()
+
+    if params == "", do: "/csv/dashboard", else: "/csv/dashboard?#{params}"
+  end
+
   # ── Styling helpers ────────────────────────────────────────────────────────
+
+  defp zone_status(zone) do
+    cond do
+      :offline in zone.alerts -> "offline"
+      zone.watering            -> "watering"
+      zone.alerts != []        -> "alert"
+      true                     -> "online"
+    end
+  end
+
+  defp status_text_class(zone) do
+    cond do
+      :offline in zone.alerts -> "text-red-400"
+      zone.watering            -> "text-blue-400"
+      zone.alerts != []        -> "text-yellow-400"
+      true                     -> "text-green-400"
+    end
+  end
 
   defp status_dot_class(zone) do
     cond do

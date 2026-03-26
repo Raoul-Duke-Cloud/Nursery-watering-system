@@ -424,13 +424,33 @@ Zones appear in the dashboard table automatically as each ESP32 connects for the
 ### Dashboard table
 
 All zones are shown in a single table — sorted by site then zone name.
-Each row shows: status indicator, site, zone, moisture (with bar), air temp, VPD, light level, operating mode, time since last reading, and action buttons.
+Each row shows: status indicator, **status text**, site, zone, moisture (with bar), air temp, VPD, light level, operating mode, time since last reading, and action buttons.
+
+The **Status** column shows one of four values:
+- `online` — zone is live and reporting normally
+- `offline` — zone has not reported for >30 minutes
+- `watering` — valve is currently open
+- `alert` — zone is online but has an active alert (sensor fault, critically dry, valve stuck)
 
 **Zones are persistent.** Once a zone has ever sent data it remains in the table across server restarts. If an ESP32 goes offline, the row stays but dims and shows the last known readings. It returns to normal automatically when the ESP32 reconnects.
 
-**Filters** (top of the dashboard):
+**Filters** (top of the dashboard) — multiple filters can be active at the same time:
+
+Categorical:
 - **Site** — show all sites or pick one
-- **Status** — All / Online / Offline / Alerts
+- **Zone** — text search within zone name
+- **Status** — All / Online / Offline / Watering / Alert
+- **Mode** — All / Normal / Local / No VPD / No moisture
+
+Numeric ranges (leave blank to skip):
+- **Moisture %** — min and/or max
+- **Temp °C** — min and/or max
+- **VPD kPa** — min and/or max
+- **Lux** — min and/or max
+
+Click **Clear filters** to reset all filters at once.
+
+**Download CSV** — exports the currently filtered table (site, zone, status, moisture, temp, VPD, lux, mode, last seen) as a CSV file. The download reflects whatever filters are active at the time.
 
 ### Actions per zone
 

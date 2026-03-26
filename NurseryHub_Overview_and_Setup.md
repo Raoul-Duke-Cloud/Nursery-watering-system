@@ -420,11 +420,23 @@ Zone cards appear automatically as each ESP32 connects for the first time.
 
 - Start with: `cmd /c "C:\Program Files\Elixir\bin\mix.bat" run -e ":timer.sleep(:infinity)"` (or set as a Windows service)
 - Dashboard at **http://localhost:4000**
-- Click **History** on any zone for moisture + VPD charts with date range selection
-- Click **Water now** for a manual 15-second drip on any zone
-- On any zone history page, select a date range and click **↓ Download CSV** to export readings
-- Database at `priv/nursery_hub.db` — open with **DB Browser for SQLite**
-  (free download) to query or export to Excel
+
+### Dashboard table
+
+All zones are shown in a single table — sorted by site then zone name.
+Each row shows: status indicator, site, zone, moisture (with bar), air temp, VPD, light level, operating mode, time since last reading, and action buttons.
+
+**Zones are persistent.** Once a zone has ever sent data it remains in the table across server restarts. If an ESP32 goes offline, the row stays but dims and shows the last known readings. It returns to normal automatically when the ESP32 reconnects.
+
+**Filters** (top of the dashboard):
+- **Site** — show all sites or pick one
+- **Status** — All / Online / Offline / Alerts
+
+### Actions per zone
+
+- Click **Water** to send a manual 15-second drip command to that zone
+- Click **Stop** to send an immediate stop command
+- Click **History** to open the zone history page — moisture + VPD charts with date range selection and CSV export
 
 ## Testing the dashboard without hardware (simulator)
 
@@ -453,8 +465,18 @@ Go to **http://localhost:4000/settings** (or click ⚙ Settings on the dashboard
 | Alert Routing | Which alert types send email, SMS, or both |
 | OTA Firmware | Current firmware version number for ESP32 OTA updates |
 
-> Email and SMS delivery are not yet active — credentials can be saved now and
-> delivery will be enabled in the next update.
+Email and SMS delivery are fully active. Fill in your credentials, enable the toggle, and save — alerts will be sent immediately from that point on.
+
+**Alert types and default routing:**
+
+| Alert | Default delivery |
+|---|---|
+| Zone offline | Email |
+| Valve stuck open | Email + SMS |
+| Sensor fault | Email |
+| Critically dry | Email + SMS |
+
+Use the **Alert Routing** section to change which alerts go where.
 
 ## Deploying firmware updates (OTA)
 
@@ -507,7 +529,6 @@ Full instructions: **`SECURITY_SETUP.md`**
 ## What's coming next
 
 - **Python ML layer** — predictive watering and cross-site anomaly detection
-- **Email/SMS alerts** — add to `alerting.ex`
 
 ---
 

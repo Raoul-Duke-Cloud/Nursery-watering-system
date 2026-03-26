@@ -15,7 +15,7 @@ defmodule NurseryHub.MixProject do
   def application do
     [
       mod: {NurseryHub.Application, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger, :inets, :ssl]
     ]
   end
 
@@ -35,7 +35,10 @@ defmodule NurseryHub.MixProject do
 
       # Database (SQLite — no separate server needed)
       {:ecto_sql, "~> 3.10"},
-      {:ecto_sqlite3, "~> 0.15"}
+      {:ecto_sqlite3, "~> 0.15"},
+
+      # Email delivery
+      {:gen_smtp, "~> 1.2"}
     ]
   end
 

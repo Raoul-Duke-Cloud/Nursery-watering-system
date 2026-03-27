@@ -47,6 +47,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 | `nursery_hub/mqtt_handler.ex` | Parses MQTT payloads, routes data to zone processes |
 | `nursery_hub/alerting.ex` | Sends email (gen_smtp) and SMS (Twilio HTTP) alerts; routing configured per alert type in settings; also sends daily heartbeat email |
 | `nursery_hub/heartbeat.ex` | GenServer — sends daily system-alive email at configured UTC hour; includes zone summary (total/offline/alerts) |
+| `nursery_hub/data_sync.ex` | GenServer — site Pi only; polls central /api/sync/health every 60s; pushes buffered readings in batches of 100; exponential backoff on failure; inactive (`:ignore`) on central server |
 | `nursery_hub/alert_log.ex` | Ecto schema + queries for the alert log table |
 | `nursery_hub/sensor_reading.ex` | Ecto schema + insert for sensor readings |
 | `nursery_hub/watering_event.ex` | Ecto schema — open/close watering events, moisture_before/after, duration_ms, trigger, dripper_fault |
@@ -69,6 +70,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 |---|---|
 | `csv_controller.ex` | Serves CSV exports for dashboard and zone history |
 | `firmware_controller.ex` | Serves OTA firmware binary to ESP32s |
+| `sync_controller.ex` | `GET /api/sync/health` (WAN probe) + `POST /api/sync/readings` (batch insert, deduplicates by site/zone/inserted_at) |
 
 ---
 

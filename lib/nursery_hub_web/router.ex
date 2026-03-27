@@ -36,4 +36,16 @@ defmodule NurseryHubWeb.Router do
     get "/version",                  FirmwareController, :version
     get "/esp32_plant_monitor.bin",  FirmwareController, :binary
   end
+
+  pipeline :api do
+    plug :accepts, ["json"]
+  end
+
+  # Sync API — used by site Pi DataSync modules to push buffered readings
+  scope "/api/sync", NurseryHubWeb do
+    pipe_through :api
+
+    get  "/health",   SyncController, :health
+    post "/readings", SyncController, :readings
+  end
 end

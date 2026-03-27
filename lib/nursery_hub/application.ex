@@ -28,6 +28,7 @@ defmodule NurseryHub.Application do
       {DynamicSupervisor, name: NurseryHub.ZoneSupervisor, strategy: :one_for_one},
       {NurseryHub.MQTTConnector, [host: mqtt_host, port: mqtt_port]},
       NurseryHub.Heartbeat,
+      NurseryHub.DataSync,
       NurseryHubWeb.Endpoint
     ]
 

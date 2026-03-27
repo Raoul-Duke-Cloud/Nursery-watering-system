@@ -113,6 +113,19 @@ One Pi per site regardless of zone count. For a site with 8 zones (2 ESP32s) thi
     → ESP32 3.3V reg → sensors via AO3401 MOSFETs (reverse polarity protection)
 ```
 
+### Pending decisions — to be confirmed on next site visit
+
+> These items are deferred until site conditions are re-checked. Do not proceed with hardware procurement or deployment until resolved.
+
+| Item | What to check | Why |
+|---|---|---|
+| Supply voltage | Measure VAC at proposed installation point at different times of day | Confirm 205–275VAC range and decide on PSU spec and whether AVR is needed |
+| Hard water | Test water hardness (TDS meter or lab test) at irrigation supply point | Confirm severity; determine whether inline softener or descaler is required or whether filter + flush schedule is sufficient |
+| Water pressure | Measure static and dynamic pressure at supply | Confirm adequate pressure for drip system; size pressure regulator |
+| SIM data plan | Check coverage at site for 4G | Confirm carrier and data allowance before ordering SIM |
+
+---
+
 ### Site-specific electrical note
 
 The confirmed supply voltage at the primary deployment site varies **205–275VAC** during the day. This exceeds the input range of standard consumer adapters and most 90–264VAC wide-input PSUs.

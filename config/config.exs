@@ -17,8 +17,9 @@ config :nursery_hub,
   valve_max_open_seconds: 120,
   stuck_moisture_hours:   6,      # alert if moisture unchanged for this long while not watering
   heartbeat_hour:         8,      # UTC hour to send daily system-alive email (0–23)
-  freeze_alert_celsius:   2,      # send freeze alert and stop all valves at or below this temp
-  freeze_clear_celsius:   4       # clear freeze alert and resume watering at or above this temp
+  freeze_alert_celsius:          2,   # send freeze alert and stop all valves at or below this temp
+  freeze_clear_celsius:          4,   # clear freeze alert and resume watering at or above this temp
+  dripper_fault_alert_threshold: 3    # consecutive dripper_fault events before firing dripper_degraded alert
 
 # ── Settings page password ────────────────────────────────────────────────────
 # Required to save any changes on the Settings page.

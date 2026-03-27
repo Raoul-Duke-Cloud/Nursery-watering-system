@@ -61,6 +61,8 @@ defmodule NurseryHub.Alerting do
     do: "[NurseryHub] Zone offline — #{site_id}/#{zone_id}"
   defp format_subject(:sensor_fault, site_id, zone_id),
     do: "[NurseryHub] Sensor fault — #{site_id}/#{zone_id}"
+  defp format_subject(:dripper_degraded, site_id, zone_id),
+    do: "[NurseryHub] Dripper degraded — #{site_id}/#{zone_id}"
   defp format_subject(:freeze_risk, site_id, zone_id),
     do: "[NurseryHub] URGENT: Freeze risk — #{site_id}/#{zone_id}"
   defp format_subject(:sensor_out_of_bounds, site_id, zone_id),
@@ -104,6 +106,19 @@ defmodule NurseryHub.Alerting do
     Moisture at #{pct}% — ESP32 should be emergency watering now.
 
     If plants are not being watered, check valve and relay immediately.
+    """
+  end
+
+  defp format_body(:dripper_degraded, site_id, zone_id, %{consecutive_faults: count}) do
+    """
+    Dripper degraded: #{site_id} / #{zone_id}
+    #{count} consecutive watering events with no significant moisture rise.
+
+    Likely causes (especially with hard water): emitter scale/blockage; valve not opening fully;
+    supply pressure drop; moisture sensor face fouled with calcium deposits.
+
+    Inspect emitters and flush drip line with citric acid solution. Check valve and sensor.
+    Alert clears automatically when dripper performance recovers.
     """
   end
 

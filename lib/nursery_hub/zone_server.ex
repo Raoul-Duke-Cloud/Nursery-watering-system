@@ -44,8 +44,9 @@ defmodule NurseryHub.ZoneServer do
     :valve_closed_at,        # DateTime valve closed — used to match post-drip readings
     sensor_ok: %{},
     alerts: [],              # list of active alert atoms
-    faulted_sensors: [],     # sensors currently in fault — used to debounce sensor_fault alerts
-    moisture_last_changed_at: nil  # DateTime when moisture last changed by >=2% — for stuck detection
+    faulted_sensors: [],          # sensors currently in fault — used to debounce sensor_fault alerts
+    moisture_last_changed_at: nil, # DateTime when moisture last changed by >=2% — for stuck detection
+    consecutive_dripper_faults: 0  # counter of back-to-back dripper_fault events — for scale/blockage detection
   ]
 
   # ── Public API ───────────────────────────────────────────────────────────
@@ -150,6 +151,7 @@ defmodule NurseryHub.ZoneServer do
       |> maybe_clear_freeze()
       |> check_sensor_faults()
       |> check_critical_moisture()
+      |> check_dripper_degraded(data["dripper_fault"])
       |> clear_offline_alert()
 
     # Persist reading to database
@@ -372,6 +374,39 @@ defmodule NurseryHub.ZoneServer do
     end
   end
 
+  # ── Consecutive dripper fault detection ───────────────────────────────────
+
+  # Tracks back-to-back dripper_fault events from the ESP32.
+  # A single fault may be a one-off; consecutive faults indicate progressive
+  # blockage (scale buildup, emitter fouling) or a stuck valve.
+  # Counter resets on a clean dripper reading. Alert clears on recovery.
+  defp check_dripper_degraded(state, true) do
+    threshold = Application.get_env(:nursery_hub, :dripper_fault_alert_threshold, 3)
+    count = state.consecutive_dripper_faults + 1
+    state = %{state | consecutive_dripper_faults: count}
+
+    if count >= threshold and :dripper_degraded not in state.alerts do
+      Alerting.alert(:dripper_degraded, state.site_id, state.zone_id, %{
+        consecutive_faults: count
+      })
+      %{state | alerts: [:dripper_degraded | state.alerts]}
+    else
+      state
+    end
+  end
+
+  defp check_dripper_degraded(state, false) do
+    state = %{state | consecutive_dripper_faults: 0}
+    if :dripper_degraded in state.alerts do
+      AlertLog.resolve(state.site_id, state.zone_id, :dripper_degraded)
+      %{state | alerts: List.delete(state.alerts, :dripper_degraded)}
+    else
+      state
+    end
+  end
+
+  defp check_dripper_degraded(state, _), do: state  # nil — no dripper data in this reading
+
   # ── Freeze protection ─────────────────────────────────────────────────────
 
   # Called from watchdog every 60s. Fires alert and sends stop command when
@@ -384,12 +419,12 @@ defmodule NurseryHub.ZoneServer do
     cond do
       state.air_temp <= threshold and :freeze_risk not in state.alerts ->
         Alerting.alert(:freeze_risk, state.site_id, state.zone_id, %{air_temp: state.air_temp})
-        send_command(state.site_id, state.zone_id, %{cmd: "stop"})
+        send_command(state.site_id, state.zone_id, %{cmd: "freeze"})
         %{state | alerts: [:freeze_risk | state.alerts]}
 
       :freeze_risk in state.alerts and state.watering ->
-        # Freeze still active — keep suppressing any valve that opened
-        send_command(state.site_id, state.zone_id, %{cmd: "stop"})
+        # Freeze still active — re-send freeze if valve has somehow opened
+        send_command(state.site_id, state.zone_id, %{cmd: "freeze"})
         state
 
       true ->
@@ -406,6 +441,7 @@ defmodule NurseryHub.ZoneServer do
     if :freeze_risk in state.alerts and state.air_temp >= clear_threshold do
       Logger.info("[#{state.site_id}/#{state.zone_id}] Freeze cleared — temp #{state.air_temp}°C")
       AlertLog.resolve(state.site_id, state.zone_id, :freeze_risk)
+      send_command(state.site_id, state.zone_id, %{cmd: "unfreeze"})
       %{state | alerts: List.delete(state.alerts, :freeze_risk)}
     else
       state

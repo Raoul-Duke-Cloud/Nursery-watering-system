@@ -6,9 +6,33 @@ This manual is for the people who operate the nursery day to day. You do not nee
 
 ## What the system does
 
-NurseryHub monitors every watering zone across your nursery and waters automatically based on soil moisture. It watches for problems — dry zones, stuck valves, sensor failures, offline zones — and sends you alerts by email or SMS when something needs attention.
+NurseryHub keeps an eye on your nursery so you don't have to watch it constantly. Sensors placed throughout your growing areas measure soil moisture, air temperature, humidity, light, and leaf temperature — all the things that tell you whether your plants are comfortable. When soil gets dry, the system turns on the water. When something looks wrong, it sends you an alert by email or SMS. You can check the status of every zone from any web browser, whether you're in the shed or off-site.
 
-You interact with the system through a web dashboard that you open in any browser.
+The goal is simple: your plants get the right amount of water at the right time, you get notified when something needs your attention, and everything keeps running even when technology misbehaves.
+
+---
+
+## A typical day
+
+Every 30 seconds, the sensors in each zone take a reading and send it back to the system. You don't need to do anything — the data flows in continuously, building up a picture of what's happening across your nursery.
+
+If you open the dashboard at any point, you'll see all your zones with their current readings. The system handles watering automatically in the background, so most days you won't need to touch it at all.
+
+---
+
+## How watering works
+
+The system watches the soil moisture in each zone. When a zone gets dry enough, it opens the valve for a short burst — 15 seconds by default. After that, it waits and checks whether the moisture level actually went up. If it did, the soil absorbed the water as expected and the cycle continues normally.
+
+If the moisture doesn't rise after watering, the system tries again. If repeated waterings produce no response, it sends you an alert — something may be blocking the dripper. A blocked emitter is easy to miss until a plant is already in trouble; this is one of the most practical things the system catches.
+
+---
+
+## During an internet outage
+
+If the internet connection drops, the system keeps running on the local network. Sensors keep talking to the local hub at the site — they have no idea the internet is gone. The hub keeps recording everything and can still send email alerts. If you're on-site, you can check the dashboard as normal at the Pi's local address.
+
+When the internet comes back, the hub automatically sends everything it recorded to the central server. There are no gaps in your data — it catches up quietly in the background.
 
 ---
 
@@ -26,7 +50,7 @@ http://[your-server-address]:4000
 http://[pi-ip-address]:4000
 ```
 
-Your system administrator will give you the correct addresses for your site. Bookmark them.
+Your system administrator will give you the correct addresses. Bookmark them.
 
 You will be asked to log in with a username and password. Your administrator will provide these.
 
@@ -34,7 +58,7 @@ You will be asked to log in with a username and password. Your administrator wil
 
 ## The Topology page — start here when something goes wrong
 
-The Topology page (`/topology`, or click **Topology** in the header) is a live map of all equipment in the system. It shows:
+The Topology page (`/topology`, or click **Topology** in the header) is a live map of all equipment in the system:
 
 - The central server at the top
 - Each site as a block, colour-coded by its worst current status
@@ -43,37 +67,35 @@ The Topology page (`/topology`, or click **Topology** in the header) is a live m
 **This is how you locate a fault in the field:**
 
 1. Open the Topology page — find the red, yellow, or orange card
-2. Note the site name and zone ID shown on the card
+2. Note the component IDs shown on the card
 3. Go to the physical site — find the enclosure with the `ESP-XXX` ID shown in the software
 4. Find the sensor or valve with the `VLV-XXX` / `MST-XXX` ID shown in the software
 5. That is the hardware behind what you saw on screen
 
-The topology view is the authoritative record of all equipment known to the system. Once a zone connects for the first time it appears here and stays until explicitly removed.
-
----
+The Topology page is the authoritative record of all equipment known to the system. Once a zone connects for the first time it appears here and stays until explicitly removed.
 
 ---
 
 ## The main dashboard
 
-When you log in you will see a table with one row per zone. Here is what each column means:
+The table view (`/`) shows all zones with live sensor readings.
 
 | Column | What it shows |
 |---|---|
 | **Site** | Which nursery location this zone is at |
-| **Zone** | The zone name (matches the label on the physical valve and sensor) |
+| **Zone** | The zone identifier |
 | **Status** | Whether the zone is working normally right now |
 | **Mode** | What information the zone is using to make watering decisions |
 | **Moisture** | Current soil moisture % |
 | **Air Temp** | Air temperature at canopy height |
 | **Humidity** | Relative humidity % |
-| **VPD** | Vapour pressure deficit — a measure of how much the air is driving water out of the plants |
+| **VPD** | Vapour pressure deficit — a measure of how hard the air is driving water out of the plants |
 | **Light** | Light level in lux |
 | **Leaf Temp** | Leaf surface temperature (infrared) |
-| **Last Seen** | When the zone last sent a reading to the system |
-| **Actions** | Buttons to water, stop, or view history for this zone |
+| **Last Seen** | When the zone last sent a reading |
+| **Actions** | Water, Stop, History buttons |
 
-The dashboard updates automatically every 30 seconds — you do not need to refresh the page.
+The dashboard updates automatically every 30 seconds.
 
 ---
 
@@ -82,9 +104,9 @@ The dashboard updates automatically every 30 seconds — you do not need to refr
 | Status | Meaning | What to do |
 |---|---|---|
 | **online** | Zone is working normally | Nothing |
-| **watering** | Zone valve is currently open and watering | Normal — will close automatically |
-| **alert** | Zone has a problem that needs attention | Read the alert — see Section: Alerts |
-| **offline** | No data received from this zone for more than 30 minutes | See Section: Zone is offline |
+| **watering** | Valve is currently open | Normal — closes automatically |
+| **alert** | Zone has a problem | Read the alert — see Alerts section |
+| **offline** | No data for more than 30 minutes | See: Zone is offline |
 
 ---
 
@@ -92,73 +114,63 @@ The dashboard updates automatically every 30 seconds — you do not need to refr
 
 | Mode | Meaning |
 |---|---|
-| **normal** | All sensors working, zone making full decisions |
-| **no_vpd** | Light or humidity sensor has a fault — zone still waters but based on moisture only |
-| **no_moisture** | Moisture sensor has a fault — zone waters on a fixed time schedule instead |
-| **local** | Zone has lost connection to the system — ESP32 is running on its own internal schedule. No live data until connection restores. |
-| **unknown** | Zone has not yet sent its first reading since startup |
+| **normal** | All sensors working, full watering decisions |
+| **no_vpd** | Light or humidity sensor fault — zone waters on moisture only |
+| **no_moisture** | Moisture sensor fault — zone waters on a fixed time schedule |
+| **local** | Lost connection to the system — ESP32 running its own schedule, no live data |
+| **unknown** | First reading not yet received |
 
-If a zone is in `no_vpd`, `no_moisture`, or `local` mode, it is still watering but with reduced information. Log it and inform your administrator.
+If a zone is in `no_vpd`, `no_moisture`, or `local` mode it is still watering, but with reduced information. Log it and inform your administrator.
 
 ---
 
 ## Manually watering a zone
 
-You can trigger a watering cycle for any zone at any time from the dashboard.
-
 1. Find the zone row in the dashboard table
-2. Click the **Water** button in the Actions column
-3. The zone status will change to `watering`
-4. The valve will close automatically after the configured cycle time (typically 15 seconds for a manual trigger)
+2. Click **Water** — the status changes to `watering`
+3. The valve closes automatically after the cycle time (typically 15 seconds)
 
-To stop a watering cycle before it finishes:
+To stop early:
 
-1. Find the zone row — it will show status `watering`
-2. Click the **Stop** button in the Actions column
-3. The valve will close within a few seconds
+1. Find the zone row showing `watering`
+2. Click **Stop** — the valve closes within a few seconds
 
-> **Note:** If a valve does not close after pressing Stop, or remains open for more than 2 minutes, the system will send a `valve_stuck_open` alert automatically and attempt to close it. If the valve is physically stuck, close the manual shutoff valve upstream and contact your administrator immediately.
+> If a valve does not close after pressing Stop, or stays open more than 2 minutes, the system will alert automatically and attempt to close it. If the valve is physically stuck, close the manual shutoff valve upstream and contact your administrator immediately.
 
 ---
 
 ## Viewing zone history
 
-To see the history of sensor readings and watering events for a zone:
-
-1. Find the zone row in the dashboard table
-2. Click the **History** button in the Actions column
-3. The zone history page shows moisture, VPD, and temperature charts over time, and a table of all watering events
-4. Use the date range picker to zoom in on a specific period
-5. Click **Export CSV** to download the data as a spreadsheet
+1. Click **History** on any zone row (or click the zone card in Topology)
+2. The history page shows moisture, VPD, and temperature charts over time
+3. Use the date range picker to zoom in on a specific period
+4. The watering events table shows when each valve opened, what triggered it, duration, and before/after moisture
+5. Click **Export CSV** to download the data
 
 ---
 
 ## Alerts
 
-When something goes wrong, the system sends you an alert by email or SMS (depending on your settings) and logs it in the alert log.
+When something goes wrong, the system sends an alert by email or SMS and logs it in the alert log.
 
-### Types of alerts
+### What each alert means
 
 | Alert | What it means |
 |---|---|
-| **Zone offline** | A zone has not sent any data for more than 30 minutes. Could be a power outage, WiFi dropout, or hardware fault. |
-| **Critical dry** | Soil moisture has dropped to 10% or below. The zone needs water urgently. |
-| **Valve stuck open** | A valve has been open for more than 2 minutes without closing. The system has attempted to close it. Check physically. |
-| **Sensor fault** | A sensor has stopped working or is reporting impossible values. The zone will continue operating in a reduced mode. |
-| **Stuck moisture** | The moisture reading has not changed for more than 6 hours while the zone has not been watering. The sensor may need cleaning or reseating. |
+| **Zone offline** | No data for more than 30 minutes — power outage, WiFi drop, or hardware fault |
+| **Critical dry** | Moisture at 10% or below — zone needs water urgently. System is attempting emergency watering. |
+| **Valve stuck open** | Valve open more than 2 minutes — system has attempted to close it. Check physically. |
+| **Sensor fault** | Sensor reporting a hardware failure — zone switches to reduced operating mode |
+| **Sensor out of bounds** | A reading came in that's physically impossible — discarded, last good value kept. Usually a brief glitch. |
+| **Stuck moisture** | Moisture reading unchanged for 6+ hours while not watering — sensor likely coated or corroded |
+| **Freeze risk** | Air temperature at 2°C or below — all watering suspended, valves closed automatically |
+| **Dripper degraded** | Repeated waterings with no moisture rise — emitter likely blocked or scaled |
 
 ### Viewing the alert log
 
-Click **Logs** in the navigation bar. You can filter by:
-- **All** — every alert, resolved or active
-- **Active** — alerts that are still ongoing
-- **Resolved** — alerts that have cleared
+Click **Logs** in the navigation bar. Filter by All / Active / Resolved. Each entry shows the zone, fault type, when it started, and when it resolved.
 
-Each alert shows the zone, the type of fault, when it started, and when it resolved (if it has).
-
-### When an alert resolves itself
-
-Many alerts resolve automatically when the underlying condition clears — for example, a zone offline alert resolves when the zone comes back online. You do not need to manually clear these.
+Most alerts resolve automatically when the underlying condition clears — you do not need to manually clear them.
 
 ---
 
@@ -166,82 +178,77 @@ Many alerts resolve automatically when the underlying condition clears — for e
 
 ### Zone is offline
 
-A zone offline alert means no data has arrived from that zone in over 30 minutes.
-
-**Check first:**
-- Is the power on at that enclosure? Check the enclosure at the site — the ESP32 board should have a power LED lit.
-- Is the site WiFi working? Check that other zones at the same site are still online. If all zones at a site are offline simultaneously, it is likely a network or power issue affecting the whole site, not individual zones.
-- Has the enclosure been opened recently? Check that all cables are seated in their terminal blocks.
-
-**If you cannot resolve it:** Log the time and zone, and contact your administrator.
+- Check the enclosure at the site — the ESP32 board should have a power LED lit
+- Check whether other zones at the same site are also offline — if yes, it is likely a site-wide power or network issue, not a single zone fault
+- Check that all cables are seated in their terminal blocks if the enclosure was recently opened
+- If you cannot resolve it: note the time, zone ID, and contact your administrator
 
 ### Moisture reading seems wrong
 
-If a moisture reading looks too high or too low and does not match what you observe in the soil:
-
-- The sensor may have shifted out of position — check the physical sensor is still inserted correctly at 45° angle to root depth
-- At hard water sites, calcium buildup on the sensor tines causes readings to drift low over time — clean the sensor with a soft brush and mild citric acid solution, then reinsert
-- If the reading is completely flat (not changing at all over hours), the sensor may have failed — contact your administrator
+- Check the sensor is still inserted correctly at 45° angle to root depth — it may have been dislodged during plant work
+- At hard water sites, calcium buildup on the sensor tines causes readings to drift low — clean with a soft brush and mild citric acid solution, then reinsert
+- If the reading is completely flat for hours: sensor may have failed — contact your administrator
 
 ### A valve will not open
 
-If you press Water and the zone does not start watering:
-
-- Check the dashboard — does the status change to `watering`? If yes, the command was received. The fault is at the valve.
-- Check the physical valve: is the solenoid receiving power? Is water supply turned on upstream?
-- Check the relay LED on the ESP32 enclosure — if the relay LED lights when you press Water but the valve does not open, the solenoid or valve seat may be faulty.
+- Does the dashboard status change to `watering` when you press Water? If yes, the command was received — the fault is at the valve
+- Check that the water supply is turned on upstream
+- If the relay LED on the ESP32 enclosure lights when you press Water but the valve doesn't open, the solenoid or valve seat may be faulty
 
 ### A valve will not close
 
-If a zone is stuck in `watering` state and pressing Stop does not help:
-
-1. **Close the manual shutoff valve** upstream of the solenoid block immediately — this physically stops water flow regardless of the solenoid state
-2. Note the time and zone
+1. **Close the manual shutoff valve** upstream immediately — stops water flow regardless of solenoid state
+2. Note the time and zone ID
 3. Contact your administrator
 
 Do not leave a stuck-open valve unattended.
 
-### All zones showing offline at once
+### All zones at one site offline at once
 
-This usually means the central server or the site hub (Pi) has stopped running, or the network connection between the site and the server has been lost.
+The site's 4G connection is likely down. Check the 4G router has power and signal. The zones will continue watering on their own internal schedule — the system is designed to keep running without the server. When the connection restores, all data syncs automatically.
 
-- Check whether the dashboard itself is loading. If you cannot load the dashboard at all, the server may be down — contact your administrator.
-- If the dashboard loads but all zones at one site are offline, the site's network connection (4G) is likely down. Check the 4G router at the site has power and signal. Zones at the site will continue to water automatically on their own internal schedule while the connection is down — the system is designed to keep running without the server.
+### Cannot load the dashboard at all
+
+The central server may be down. Contact your administrator.
 
 ---
 
 ## Settings
 
-The Settings page (accessible from the navigation bar) is password-protected. Contact your administrator for access.
-
-Settings include email and SMS configuration, alert routing (which alerts trigger email vs SMS), and OTA firmware version for ESP32 updates.
+The Settings page is password-protected. Contact your administrator for access. It covers email and SMS configuration, alert routing, and OTA firmware version for ESP32 updates.
 
 ---
 
-## Routine maintenance reminders
+## Routine maintenance
 
-These are not software tasks — they are physical tasks that keep the system accurate. Your administrator will confirm the schedule for your site.
+These are physical tasks that keep the system accurate. Your administrator will confirm the schedule for your site.
 
 | Task | Frequency | Why |
 |---|---|---|
-| Clean moisture sensors | Every 3 months | Calcium and mineral buildup causes readings to drift, especially at hard water sites |
-| Inspect drip emitters for blockages | Monthly | Scale and debris block emitters, causing uneven watering |
-| Flush drip lines with citric acid solution | Every 6 months (hard water sites) | Prevents progressive scale buildup in pipes |
+| Clean moisture sensors | Every 3 months | Calcium buildup causes readings to drift |
+| Inspect drip emitters for blockages | Monthly | Scale and debris cause uneven watering |
+| Flush drip lines with citric acid | Every 6 months (hard water) | Prevents progressive scale buildup |
 | Inspect solenoid valves for slow closing | Every 6 months | Early sign of debris on valve seat |
-| Replace solenoid valves | Every 12 months (hard water sites) | Scale on valve seat eventually causes valve failure |
-| Check sensor physical placement | After any plant management work | Sensors can be dislodged during pruning or repotting |
+| Replace solenoid valves | Every 12 months (hard water) | Scale eventually causes valve failure |
+| Check sensor placement | After any plant management work | Sensors can be dislodged during pruning or repotting |
+
+---
+
+## What you don't need to worry about
+
+The system is designed to keep going when things go wrong. If a sensor fails, the zone switches to a fallback schedule rather than stopping entirely. If the server crashes, valves close themselves automatically within 60 seconds. If WiFi drops, each ESP32 runs its own local watering schedule until it reconnects. If the internet goes down, the local hub keeps everything running until it's restored.
+
+You grow the plants. NurseryHub handles the watching.
 
 ---
 
 ## Contacting support
 
-If you have followed the steps above and cannot resolve the issue:
-
 **Information to have ready:**
-- Which site and zone is affected (read the label on the physical hardware)
-- What the dashboard shows (status, mode, last seen time)
-- What alert was received (copy the alert text)
-- What you have already checked or tried
+- Component ID of the affected hardware (read the label)
+- What the Topology or dashboard shows (status, mode, last seen)
+- What alert was received (copy the text)
+- What you have already checked
 
 The more specific you can be, the faster the problem can be resolved.
 
@@ -249,7 +256,7 @@ The more specific you can be, the faster the problem can be resolved.
 
 ## Quick reference card
 
-Print this section and keep it at the site.
+Print this and keep it at the site.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -261,9 +268,8 @@ Print this section and keep it at the site.
 │                                                                 │
 │  FAULT IN THE FIELD?                                            │
 │  1. Open Topology page → find the coloured card                 │
-│  2. Read the site and zone ID on the card                       │
-│  3. Find the enclosure (ESP-XXX) shown in the software           │
-│  4. Find the sensor/valve with that zone label                  │
+│  2. Read the component ID from the card                         │
+│  3. Find the hardware with that ID label                        │
 │                                                                 │
 │  STATUS COLOURS                                                 │
 │  green  — online, normal                                        │
@@ -280,6 +286,7 @@ Print this section and keep it at the site.
 │  valve_stuck_open  — close manual shutoff, call admin           │
 │  zone_offline      — check power and WiFi at site               │
 │  sensor_fault      — zone still watering, inform admin          │
+│  freeze_risk       — watering suspended, check frost protection │
 │                                                                 │
 │  Admin contact: _______________________________                 │
 └─────────────────────────────────────────────────────────────────┘

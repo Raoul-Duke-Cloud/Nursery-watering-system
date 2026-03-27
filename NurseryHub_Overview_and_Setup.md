@@ -421,6 +421,14 @@ Zones appear in the dashboard table automatically as each ESP32 connects for the
 - Start with: `cmd /c "C:\Program Files\Elixir\bin\mix.bat" run -e ":timer.sleep(:infinity)"` (or set as a Windows service)
 - Dashboard at **http://localhost:4000**
 
+### Topology view
+
+Go to **http://localhost:4000/topology** (or click **Topology** in the dashboard header).
+
+Shows the full equipment hierarchy as a visual map: central server at the top, each site as a block below it, each zone as a card within its site. Cards are colour-coded by status. Use this when something goes wrong — find the fault on screen, identify which node and zone it is, then go to the field and find the hardware with that label.
+
+The topology view updates live via WebSocket. It is the authoritative register of all equipment currently known to the system.
+
 ### Dashboard table
 
 All zones are shown in a single table — sorted by site then zone name.
@@ -460,7 +468,7 @@ Click **Clear filters** to reset all filters at once.
 
 ### Alert Log
 
-Go to **http://localhost:4000/logs** (or click **Alert Log** in the dashboard header).
+Go to **http://localhost:4000/logs** (or click **Alert Log** in the header from any page).
 
 Shows every alert that has fired, newest first. Use the **Show** filter to see:
 - **All alerts** — full history

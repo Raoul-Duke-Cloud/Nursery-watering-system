@@ -126,6 +126,10 @@ defmodule NurseryHubWeb.DashboardLive do
             <div class="text-xs text-gray-500">Last update</div>
             <div class="text-sm text-gray-300"><%= format_time(@last_refresh) %></div>
           </div>
+          <a href="/topology"
+            class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg">
+            Topology
+          </a>
           <a href="/logs"
             class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-400 px-3 py-2 rounded-lg">
             Alert Log

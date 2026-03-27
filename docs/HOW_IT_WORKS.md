@@ -56,9 +56,13 @@ When the internet comes back, the Pi automatically sends everything it recorded 
 
 ## The Dashboard
 
-The dashboard gives you an at-a-glance view of every zone. Each zone shows its current readings and a status colour: green for online and normal, blue for actively watering, orange for an alert condition, grey for offline.
+There are two main views in the dashboard:
 
-From the dashboard you can manually trigger watering in a zone if you want to run a check, or manually stop a valve if one is running longer than you expected. There's also a history view where you can see how moisture and temperature have tracked over time, and an alert log that keeps a record of every notification the system has sent.
+**Topology view** (`/topology`) — shows the full equipment map: your central server at the top, each site below it, and every zone as a card within its site. Each card is colour-coded by status — green for normal, blue for watering, yellow for alert, red for offline. This is the first place to look when something goes wrong: find the fault on screen, read which node and zone it is, go to the field and find the hardware with the matching label.
+
+**Table view** (`/`) — the detailed list of all zones with sensor readings, filters, and action buttons. Use this when you want to compare readings across zones or filter by site, status, or sensor ranges.
+
+From either view you can manually trigger watering in a zone, stop a valve, or drill into a zone's full history. There's also an alert log that keeps a record of every notification the system has sent.
 
 ---
 

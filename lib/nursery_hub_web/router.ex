@@ -21,6 +21,7 @@ defmodule NurseryHubWeb.Router do
     live "/",                       DashboardLive, :overview
     live "/site/:site_id",          DashboardLive, :site
     live "/zone/:site_id/:zone_id", ZoneLive,      :detail
+    live "/topology",               TopologyLive,  :index
     live "/settings",               SettingsLive,  :index
     live "/logs",                   LogsLive,      :index
 

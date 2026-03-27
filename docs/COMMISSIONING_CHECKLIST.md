@@ -309,9 +309,14 @@ For each zone, verify that the readings are physically plausible. This is the mo
 
 ### 7.2 Dashboard validation
 
-- [ ] All expected zones appear in dashboard table
-- [ ] All zones show status `online` (not `offline` or `unknown`)
-- [ ] Sensor readings updating live — watch for 2–3 refresh cycles (should update every ~30s)
+- [ ] Topology page (`/topology`) loads and shows the central server node
+- [ ] All commissioned sites appear as blocks in the Topology view
+- [ ] All expected zones appear as cards under their site
+- [ ] All zone cards show status `online` (green) — no red or yellow cards
+- [ ] Topology updates live — watch a zone card, confirm readings change within ~35s
+- [ ] Click a zone card — confirms it navigates to the zone detail page
+- [ ] All zones show status `online` in the table view (`/`)
+- [ ] Sensor readings updating live in table view — watch for 2–3 refresh cycles
 - [ ] VPD values shown and plausible for current conditions
 - [ ] Zone mode shown as `normal` for all zones (not `local`, `no_vpd`, `no_moisture`)
 - [ ] Filter by site works correctly

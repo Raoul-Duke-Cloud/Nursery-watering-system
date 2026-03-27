@@ -60,6 +60,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 | File | URL | What it does |
 |---|---|---|
 | `dashboard_live.ex` | `/` | Main table — all zones, live updates via PubSub, filters (site/zone/status/mode/sensor ranges), CSV download, Water/Stop/History actions |
+| `topology_live.ex` | `/topology` | Visual equipment map — central server → sites → zone cards, colour-coded by status, live updates, click to drill into zone detail. Authoritative equipment register. |
 | `zone_live.ex` | `/zone/:site/:zone` | Per-zone history — moisture + VPD charts, date range picker, watering events table, CSV export |
 | `logs_live.ex` | `/logs` | Alert log — all/active/resolved filter, colour-coded alert type badges |
 | `settings_live.ex` | `/settings` | Email (SMTP), SMS (Twilio), alert routing per alert type, OTA firmware version, test email/SMS buttons |

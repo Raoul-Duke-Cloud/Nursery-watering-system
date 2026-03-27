@@ -32,6 +32,28 @@ You will be asked to log in with a username and password. Your administrator wil
 
 ---
 
+## The Topology page — start here when something goes wrong
+
+The Topology page (`/topology`, or click **Topology** in the header) is a live map of all equipment in the system. It shows:
+
+- The central server at the top
+- Each site as a block, colour-coded by its worst current status
+- Every zone as a card within its site, showing moisture, temperature, status, and any active alerts
+
+**This is how you locate a fault in the field:**
+
+1. Open the Topology page — find the red, yellow, or orange card
+2. Note the site name and zone ID shown on the card
+3. Go to the physical site — find the enclosure labelled with that node number
+4. Find the sensor or valve labelled with that zone ID
+5. That is the hardware behind what you saw on screen
+
+The topology view is the authoritative record of all equipment known to the system. Once a zone connects for the first time it appears here and stays until explicitly removed.
+
+---
+
+---
+
 ## The main dashboard
 
 When you log in you will see a table with one row per zone. Here is what each column means:
@@ -233,24 +255,31 @@ Print this section and keep it at the site.
 ┌─────────────────────────────────────────────────────────────────┐
 │  NurseryHub — Quick Reference                                   │
 │                                                                 │
-│  Dashboard: http://___________________________:4000             │
-│  On-site:   http://___________________________:4000             │
+│  Dashboard:  http://___________________________:4000            │
+│  On-site:    http://___________________________:4000            │
+│  Topology:   [above address]/topology                           │
+│                                                                 │
+│  FAULT IN THE FIELD?                                            │
+│  1. Open Topology page → find the coloured card                 │
+│  2. Read the site and zone ID on the card                       │
+│  3. Find the enclosure with that node label                     │
+│  4. Find the sensor/valve with that zone label                  │
 │                                                                 │
 │  STATUS COLOURS                                                 │
-│  online    — normal, no action needed                           │
-│  watering  — valve open, watering in progress                   │
-│  alert     — fault, check alert log                             │
-│  offline   — no data >30 min, check power and network           │
+│  green  — online, normal                                        │
+│  blue   — watering in progress                                  │
+│  yellow — alert, check the card                                 │
+│  red    — offline, check power and network                      │
 │                                                                 │
-│  TO MANUALLY WATER:  Dashboard → Water button                   │
-│  TO STOP WATERING:   Dashboard → Stop button                    │
-│  VALVE WON'T CLOSE:  Close manual shutoff valve → call admin    │
+│  TO MANUALLY WATER:  Table view → Water button                  │
+│  TO STOP WATERING:   Table view → Stop button                   │
+│  VALVE WON'T CLOSE:  Close manual shutoff → call admin          │
 │                                                                 │
 │  ALERTS                                                         │
-│  critical_dry      — moisture ≤10%, zone needs water urgently   │
+│  critical_dry      — moisture ≤10%, water urgently              │
 │  valve_stuck_open  — close manual shutoff, call admin           │
 │  zone_offline      — check power and WiFi at site               │
-│  sensor_fault      — zone still watering, log and inform admin  │
+│  sensor_fault      — zone still watering, inform admin          │
 │                                                                 │
 │  Admin contact: _______________________________                 │
 └─────────────────────────────────────────────────────────────────┘

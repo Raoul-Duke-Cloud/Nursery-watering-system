@@ -1,228 +1,154 @@
 # NurseryHub — Labelling and Identification System
 
-Every physical component in the system must be labelled so that any person — including someone unfamiliar with the installation — can immediately identify what they are looking at, which zone it serves, and where it appears in the software dashboard.
+Labels on physical hardware identify the hardware itself. The software (dashboard → Topology page) tells you which site it belongs to and what its current status is. A label is not a map — the software is the map.
+
+The rule is simple: **if you can see it in the software, the label on the physical hardware must match it exactly.**
 
 ---
 
 ## Naming Convention
 
-The system uses a three-level hierarchy that matches the software exactly:
+Every piece of hardware has a short, unique identifier that matches what appears in the dashboard.
+
+| Hardware | Label format | Example | Matches in software |
+|---|---|---|---|
+| ESP32 enclosure | `NODE-{n}` | `NODE-1` | Groups of zones in the Topology view |
+| Watering zone | `{node}-{zone}` | `N1-A` | Zone ID column in dashboard |
+| Solenoid valve | `{node}-{zone}` | `N1-A` | Same as zone — one valve per zone |
+| Sensor (moisture) | `{node}-{zone} MOIST` | `N1-A MOIST` | Zone ID + sensor type |
+| Sensor (air temp/humidity) | `{node} DHT` | `N1 DHT` | Node-level shared sensor |
+| Sensor (light) | `{node} LUX` | `N1 LUX` | Node-level shared sensor |
+| Sensor (leaf temp IR) | `{node} IR` | `N1 IR` | Node-level shared sensor |
+| Nerves Pi hub | `HUB-{n}` | `HUB-1` | Site hub in Topology view |
+| Cable | `{node}-{zone} — {signal}` | `N1-A — MOIST` | N/A — internal wiring reference |
+
+Node numbers are assigned sequentially across the whole deployment — `NODE-1`, `NODE-2`, etc. regardless of which site they are at. The software maps each node's zones to a site. The label just says what the hardware is.
+
+---
+
+## Label Formats by Component
+
+### ESP32 Enclosure
+
+Large label on the outside of the lid, readable without opening.
 
 ```
-SITE  ›  NODE  ›  ZONE
+┌──────────────────────┐
+│  NODE-1              │
+│  Zones: A  B  C  D  │
+│                      │
+│  Firmware: v4.0      │
+└──────────────────────┘
 ```
 
-| Level | What it is | Example |
-|---|---|---|
-| **SITE** | The nursery location | `NORTHCOTE` |
-| **NODE** | One ESP32 enclosure (controls up to 4 zones) | `NODE-1` |
-| **ZONE** | One watering zone (one valve + one set of sensors) | `ZONE-A` |
+Fill in firmware version at commissioning and update when firmware is changed.
 
-Full component identifier format:
+---
+
+### Solenoid Valve
+
 ```
-NORTHCOTE / NODE-1 / ZONE-A
+N1-A
 ```
 
-This matches what you see in the dashboard. If a zone shows a fault on screen, you can read the label on the physical hardware and immediately know what to look for.
+On the valve body, or on the pipe immediately adjacent. Must be readable without moving hardware.
 
-### Site ID
+---
 
-Choose a short, memorable, all-caps word for each site. No spaces — use hyphens if needed.
+### Sensors
 
-| Example | Notes |
+| Sensor | Label |
 |---|---|
-| `NORTHCOTE` | Good — clear, short |
-| `HEIDELBERG` | Good |
-| `SITE-01` | Acceptable if no meaningful name |
-| `The Main Nursery Site` | Bad — too long, spaces, mixed case |
+| Moisture sensor (Zone A on Node 1) | `N1-A MOIST` |
+| Moisture sensor (Zone B on Node 1) | `N1-B MOIST` |
+| Secondary moisture (if dual fitted) | `N1-A MOIST-2` |
+| DHT22 air temp + humidity | `N1 DHT` |
+| BH1750 light | `N1 LUX` |
+| MLX90614 leaf IR | `N1 IR` |
+| ADS1115 ADC (if fitted) | `N1 ADC` |
 
-The site ID must match the `SITE_ID` value in the ESP32 firmware and Nerves Pi config exactly. Once set, do not change it — all historical data in the database is indexed by this name.
-
-### Node numbering
-
-Number nodes sequentially per site starting at 1: `NODE-1`, `NODE-2`, etc.
-
-### Zone letters
-
-Zones within a node are always labelled A, B, C, D — matching the `ZONE_IDS` array in the firmware. Zone A is always the first zone on that node.
+Label on the sensor body or mounting bracket. For sensors on cable extensions (MLX90614), label the cable near the sensor end.
 
 ---
 
-## Label Types and Placement
+### Cables — Both Ends
 
-### 1 — Enclosure Label
+Every cable must be labelled at **both ends** within 50mm of the termination point.
 
-**What it identifies:** The ESP32 node inside this enclosure.
-
-**What to put on it:**
-```
-┌─────────────────────────┐
-│  NORTHCOTE              │
-│  NODE-1                 │
-│  Zones A · B · C · D   │
-│                         │
-│  MQTT: 192.168.1.XX     │  ← local IP of MQTT broker (Pi or router)
-│  Firmware: v4.0         │  ← fill in at commissioning
-└─────────────────────────┘
-```
-
-**Placement:** On the outside face of the enclosure lid, at eye level.
-
-**Size:** Minimum 60 × 40mm — large enough to read without crouching.
-
----
-
-### 2 — Valve Label
-
-**What it identifies:** Which zone this solenoid valve controls.
-
-**What to put on it:**
-```
-NORTHCOTE / NODE-1
-ZONE-A
-```
-
-**Placement:** Directly on the valve body or on the pipe immediately upstream of the valve. Must be readable without moving any hardware.
-
----
-
-### 3 — Cable Labels — Both Ends
-
-Every cable must be labelled at **both ends**. A cable with one labelled end is only half labelled.
-
-**Format:**
-```
-[SITE] / [NODE] / [ZONE] — [SIGNAL]
-```
-
-| Signal abbreviation | Meaning |
+| Signal | Cable label |
 |---|---|
-| `PWR-12V` | 12V DC power |
-| `PWR-5V` | 5V DC power |
-| `PWR-3V3` | 3.3V sensor supply |
-| `GND` | Ground / negative |
-| `MOIST-A` | Moisture sensor, Zone A |
-| `MOIST-B` | Moisture sensor, Zone B |
-| `MOIST-C` | Moisture sensor, Zone C |
-| `MOIST-D` | Moisture sensor, Zone D |
-| `DHT22` | Air temperature + humidity sensor |
-| `BH1750` | Light sensor |
-| `MLX` | Leaf IR temperature sensor |
-| `VALVE-A` | Solenoid valve, Zone A |
-| `VALVE-B` | Solenoid valve, Zone B |
-| `VALVE-C` | Solenoid valve, Zone C |
-| `VALVE-D` | Solenoid valve, Zone D |
-| `I2C-SDA` | I2C data line |
-| `I2C-SCL` | I2C clock line |
-
-**Example cable label:**
-```
-NORTHCOTE / NODE-1 / ZONE-A — MOIST-A
-```
-
-**Placement:** Wrap-around labels at each end, within 50mm of the termination point (terminal block or connector).
+| Moisture sensor, Zone A | `N1-A — MOIST` |
+| Moisture sensor, Zone B | `N1-B — MOIST` |
+| Secondary moisture, Zone A | `N1-A — MOIST-2` |
+| DHT22 | `N1 — DHT` |
+| BH1750 | `N1 — LUX` |
+| MLX90614 | `N1 — IR` |
+| Solenoid valve, Zone A | `N1-A — VALVE` |
+| Solenoid valve, Zone B | `N1-B — VALVE` |
+| I2C bus | `N1 — I2C` |
+| 12V power in | `N1 — PWR-12V` |
+| 5V rail | `N1 — PWR-5V` |
+| 3.3V sensor supply | `N1 — PWR-3V3` |
+| GND | `N1 — GND` |
 
 ---
 
-### 4 — Sensor Labels
+### Terminal Blocks
 
-**What it identifies:** Which sensor this is and which zone it serves.
+Label each terminal inside the enclosure. Use the same signal abbreviations as the cable labels. Use clip-in terminal markers or a printed label strip above the terminal row.
 
-**What to put on it:**
 ```
-NORTHCOTE / NODE-1
-MOISTURE — ZONE-A
+PWR-12V(+) | GND | PWR-5V(+) | GND | PWR-3V3(+) | GND
+N1-A MOIST | N1-B MOIST | N1-C MOIST | N1-D MOIST
+N1-A VALVE | N1-B VALVE | N1-C VALVE | N1-D VALVE
+I2C-SDA | I2C-SCL | N1 DHT | N1 LUX | N1 IR
 ```
-
-| Sensor | Label text |
-|---|---|
-| Capacitive moisture sensor | `MOISTURE — ZONE-A` (etc.) |
-| DHT22 | `AIR TEMP + HUMIDITY` |
-| BH1750 | `LIGHT SENSOR` |
-| MLX90614 | `LEAF TEMP (IR)` |
-| ADS1115 | `ADC — DUAL MOISTURE` |
-
-**Placement:** On the sensor body or mounting bracket. For sensors that move (MLX90614 on an adjustable arm), label the cable near the sensor end.
 
 ---
 
-### 5 — Terminal Block Labels
-
-Label each terminal on the DIN rail terminal blocks inside the enclosure. Use the same signal abbreviations as the cable labels.
+### Nerves Pi Enclosure
 
 ```
-PWR-12V(+)  |  GND  |  PWR-5V(+)  |  GND  |  PWR-3V3(+)  |  GND
-MOIST-A(+)  |  MOIST-A(SIG)  |  MOIST-A(GND)  |  ...
-VALVE-A  |  VALVE-B  |  VALVE-C  |  VALVE-D
+┌──────────────────────────────┐
+│  HUB-1                       │
+│                              │
+│  Dashboard:                  │
+│  http://[ip]:4000            │
+│                              │
+│  Firmware: vX.X              │
+└──────────────────────────────┘
 ```
 
-Adhesive terminal strip markers (Brady or equivalent, pre-printed or write-on) are the neatest option. A printed label strip taped above the terminal row is acceptable.
+Fill in the Pi's local IP at commissioning.
 
 ---
 
-### 6 — Pi Enclosure Label (if Nerves Pi deployed)
+## How to positively identify hardware in the field
 
-```
-┌─────────────────────────┐
-│  NORTHCOTE              │
-│  SITE HUB (Pi)          │
-│                         │
-│  Dashboard:             │
-│  http://192.168.1.XX:4000│
-│                         │
-│  SSH: ssh nerves.local  │
-│  Firmware: vX.X         │
-└─────────────────────────┘
-```
+1. An alert or event appears — open the **Topology page** (`/topology`)
+2. Find the coloured zone card. It shows the site and zone ID.
+3. Go to the field. Find the enclosure labelled `NODE-{n}` for that node.
+4. Find the valve or sensor labelled `N{n}-{zone}` — that is the physical hardware behind the fault.
+
+The Topology page is the map. The label is the positive ID. The Topology page is also the equipment register — zones appear there permanently from first connection and remain until explicitly decommissioned. No separate paper register is required or maintained.
 
 ---
 
 ## Label Materials — Outdoor Installations
 
-Labels in a nursery environment are exposed to moisture, UV, fertiliser spray, and temperature cycling. Standard paper or standard adhesive labels will fail within weeks.
+| Location | Required spec | Recommended product |
+|---|---|---|
+| Enclosure face | UV-stable, waterproof, min 60×40mm | Laser-printed polyester overlay, laminated |
+| Valve body | UV-stable, adhesive, min 25×15mm | Brady M21-750-499 self-laminating vinyl |
+| Sensor body / bracket | UV-stable, adhesive or mechanical | Brady M21-750-499 or heat-shrink sleeve |
+| Cables — both ends | Wrap-around, UV-stable | Self-laminating wrap labels or Brady PermaSleeve heat-shrink |
+| Terminal blocks | Clip-in markers or label strip | Phoenix Contact or Weidmüller clip-in markers |
 
-| Requirement | Recommended product |
-|---|---|
-| Cable and sensor labels | Brady M21-750-499 self-laminating vinyl wrap labels, or equivalent |
-| Enclosure face labels | UV-stable polyester or polycarbonate overlay labels (laser-printable) — laminate after printing |
-| Write-on site labels | Brady BMP21 label printer with M21 vinyl cartridge — suitable for outdoor use without additional lamination |
-| Terminal block markers | Brady PermaSleeve wire markers, or clip-in terminal markers (Phoenix Contact or Weidmüller) |
+Minimum spec for any outdoor label:
+- UV-stable substrate
+- Waterproof adhesive or mechanical fixing (heat-shrink, cable tie mount)
+- Legible at 0.5m in normal site lighting
+- Expected service life ≥ 3 years
 
-**Minimum spec for any label used outdoors:**
-- UV-stable substrate (not plain white paper)
-- Waterproof adhesive or mechanical fixing
-- Legible at 0.5m in typical site lighting conditions
-- Expected service life ≥ 3 years without replacement
+Do not use: standard paper labels, standard P-Touch tape without lamination, or handwritten marker pen on tape.
 
-Avoid: standard adhesive cable tie labels (UV-degrade and fall off), standard Brother P-Touch tape without lamination (fades within months outdoors), handwritten marker pen on tape (illegible after one season).
-
----
-
-## Label Register
-
-Maintain a label register for each site — a simple table confirming every label has been applied and what it says. File this register with the commissioning checklist for the site.
-
-| Item | Location | Label text | Applied |
-|---|---|---|---|
-| Enclosure — Node 1 | Post A, north face | `NORTHCOTE / NODE-1 / Zones A·B·C·D` | [ ] |
-| Valve — Zone A | Valve body, Zone A pipe | `NORTHCOTE / NODE-1 / ZONE-A` | [ ] |
-| Moisture sensor — Zone A | Sensor body | `MOISTURE — ZONE-A` | [ ] |
-| Moisture sensor cable — enclosure end | Terminal block, within 50mm | `NORTHCOTE / NODE-1 / ZONE-A — MOIST-A` | [ ] |
-| Moisture sensor cable — sensor end | Cable near sensor | `NORTHCOTE / NODE-1 / ZONE-A — MOIST-A` | [ ] |
-| DHT22 — Node 1 | Radiation shield bracket | `AIR TEMP + HUMIDITY — NODE-1` | [ ] |
-| BH1750 — Node 1 | Sensor mounting arm | `LIGHT SENSOR — NODE-1` | [ ] |
-| MLX90614 — Node 1 | Cable near sensor | `LEAF TEMP (IR) — NODE-1` | [ ] |
-| Pi enclosure | Pi mounting location | `NORTHCOTE / SITE HUB (Pi)` | [ ] |
-
-Add one row per cable, sensor, valve, and enclosure at each site.
-
----
-
-## Quick Identification Guide
-
-If you are standing in front of a piece of hardware and trying to work out what it is:
-
-1. **Find the enclosure label** — it tells you the site, node number, and which zones are inside
-2. **Find the zone letter** on the valve or sensor label — this matches the zone letter on the dashboard
-3. **Cross-reference with the dashboard** — search by site and zone to see the live readings and status for that exact piece of hardware
-4. **If a label is missing or unreadable** — check the label register in the site commissioning file, or trace the cable back to the terminal block inside the enclosure where it will be labelled at the termination point

@@ -104,7 +104,8 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
 // SITE + SERVER CONFIG
 // ═══════════════════════════════════════════════════════════════════
 
-#define SITE_ID "site_01"    // e.g. "northcote", "fitzroy"
+#define SITE_ID  "site_01"   // e.g. "northcote", "fitzroy"
+#define NODE_ID  "ESP-001"   // asset tag on this physical enclosure — must match the label
 
 // Current firmware version — increment this each time you deploy new firmware
 // The server compares this to decide whether to push an update
@@ -603,6 +604,7 @@ void publishZone(int zone, int moisture) {
   if (!mqtt.connected()) return;
   StaticJsonDocument<512> doc;
   doc["site"]          = SITE_ID;      doc["zone"]          = ZONE_IDS[zone];
+  doc["node_id"]       = NODE_ID;
   doc["ts"]            = millis()/1000; doc["moisture"]      = moisture;
   doc["lux"]           = sharedLux;    doc["leaf_temp"]      = sharedLeafTemp;
   doc["air_temp"]      = sharedAirTemp; doc["humidity"]      = sharedHumidity;

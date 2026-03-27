@@ -29,6 +29,7 @@ defmodule NurseryHub.ZoneServer do
   defstruct [
     :site_id,
     :zone_id,
+    :node_id,                # Asset tag of the ESP32 this zone is on (e.g. "ESP-001")
     :last_seen,              # DateTime of last received message
     :moisture,
     :lux,
@@ -112,6 +113,7 @@ defmodule NurseryHub.ZoneServer do
 
     new_state = %{state |
       last_seen:   now,
+      node_id:     data["node_id"] || state.node_id,
       moisture:    data["moisture"],
       lux:         data["lux"],
       leaf_temp:   data["leaf_temp"],

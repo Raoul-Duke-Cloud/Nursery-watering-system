@@ -37,10 +37,19 @@ defmodule NurseryHubWeb.TopologyLive do
   def render(assigns) do
     all_zones = Map.values(assigns.zones)
 
+    # Group: site_id -> node_id -> [zones]
+    # Zones with no node_id yet (old data or no firmware update) go under "unknown"
     sites =
       all_zones
       |> Enum.group_by(& &1.site_id)
       |> Enum.sort_by(fn {site_id, _} -> site_id end)
+      |> Enum.map(fn {site_id, zones} ->
+        nodes =
+          zones
+          |> Enum.group_by(&(&1.node_id || "unknown"))
+          |> Enum.sort_by(fn {node_id, _} -> node_id end)
+        {site_id, nodes}
+      end)
 
     total    = length(all_zones)
     n_ok     = Enum.count(all_zones, &(zone_status(&1) == :online))
@@ -123,8 +132,8 @@ defmodule NurseryHubWeb.TopologyLive do
         </div>
 
         <%!-- Site blocks --%>
-        <%= for {site_id, zones} <- @sites do %>
-          <.site_block site_id={site_id} zones={zones} />
+        <%= for {site_id, nodes} <- @sites do %>
+          <.site_block site_id={site_id} nodes={nodes} />
         <% end %>
 
       </div>
@@ -145,19 +154,20 @@ defmodule NurseryHubWeb.TopologyLive do
   # ── Site block ─────────────────────────────────────────────────────────────
 
   defp site_block(assigns) do
-    zones    = assigns.zones
-    n_ok     = Enum.count(zones, &(zone_status(&1) == :online))
-    n_alert  = Enum.count(zones, &(zone_status(&1) == :alert))
-    n_off    = Enum.count(zones, &(zone_status(&1) == :offline))
-    n_water  = Enum.count(zones, &(&1.watering))
-    worst    = worst_status(zones)
+    all_zones = assigns.nodes |> Enum.flat_map(fn {_, zones} -> zones end)
+    n_ok      = Enum.count(all_zones, &(zone_status(&1) == :online))
+    n_alert   = Enum.count(all_zones, &(zone_status(&1) == :alert))
+    n_off     = Enum.count(all_zones, &(zone_status(&1) == :offline))
+    n_water   = Enum.count(all_zones, &(&1.watering))
+    worst     = worst_status(all_zones)
 
     assigns = assign(assigns,
-      n_ok:    n_ok,
-      n_alert: n_alert,
-      n_off:   n_off,
-      n_water: n_water,
-      worst:   worst
+      n_ok:      n_ok,
+      n_alert:   n_alert,
+      n_off:     n_off,
+      n_water:   n_water,
+      worst:     worst,
+      all_zones: all_zones
     )
 
     ~H"""
@@ -178,33 +188,51 @@ defmodule NurseryHubWeb.TopologyLive do
             <div class="flex items-center gap-3">
               <span class="font-semibold text-sm text-white"><%= @site_id %></span>
               <span class="text-xs text-gray-400">
-                <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %>
+                <%= length(@nodes) %> node<%= if length(@nodes) != 1, do: "s" %> ·
+                <%= length(@all_zones) %> zone<%= if length(@all_zones) != 1, do: "s" %>
               </span>
             </div>
             <div class="flex items-center gap-2 text-xs">
-              <%= if @n_ok > 0 do %>
-                <span class="text-green-400"><%= @n_ok %> online</span>
-              <% end %>
-              <%= if @n_water > 0 do %>
-                <span class="text-blue-400">💦 <%= @n_water %> watering</span>
-              <% end %>
-              <%= if @n_alert > 0 do %>
-                <span class="text-yellow-400">⚠ <%= @n_alert %> alert</span>
-              <% end %>
-              <%= if @n_off > 0 do %>
-                <span class="text-red-400">✕ <%= @n_off %> offline</span>
-              <% end %>
+              <%= if @n_ok > 0 do %><span class="text-green-400"><%= @n_ok %> online</span><% end %>
+              <%= if @n_water > 0 do %><span class="text-blue-400">💦 <%= @n_water %></span><% end %>
+              <%= if @n_alert > 0 do %><span class="text-yellow-400">⚠ <%= @n_alert %></span><% end %>
+              <%= if @n_off > 0 do %><span class="text-red-400">✕ <%= @n_off %></span><% end %>
             </div>
           </div>
 
-          <%!-- Zone cards --%>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-700">
-            <%= for zone <- Enum.sort_by(@zones, & &1.zone_id) do %>
-              <.zone_card zone={zone} />
+          <%!-- Node blocks --%>
+          <div class="divide-y divide-gray-700">
+            <%= for {node_id, zones} <- @nodes do %>
+              <.node_block node_id={node_id} zones={zones} />
             <% end %>
           </div>
 
         </div>
+      </div>
+    </div>
+    """
+  end
+
+  # ── Node block ─────────────────────────────────────────────────────────────
+
+  defp node_block(assigns) do
+    worst = worst_status(assigns.zones)
+    assigns = assign(assigns, worst: worst)
+
+    ~H"""
+    <div class="px-3 py-2">
+      <%!-- Node header --%>
+      <div class="flex items-center gap-2 mb-2">
+        <div class={"w-2 h-2 rounded-full flex-shrink-0 " <> site_dot_class(@worst)}></div>
+        <span class="font-mono text-xs font-semibold text-gray-300"><%= @node_id %></span>
+        <span class="text-xs text-gray-600">ESP32 · <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %></span>
+      </div>
+
+      <%!-- Zone cards --%>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-700 rounded overflow-hidden ml-4">
+        <%= for zone <- Enum.sort_by(@zones, & &1.zone_id) do %>
+          <.zone_card zone={zone} />
+        <% end %>
       </div>
     </div>
     """
@@ -313,6 +341,7 @@ defmodule NurseryHubWeb.TopologyLive do
     %ZoneServer{
       site_id:   r.site_id,
       zone_id:   r.zone_id,
+      node_id:   r.node_id,
       last_seen: r.inserted_at,
       moisture:  r.moisture,
       lux:       r.lux,

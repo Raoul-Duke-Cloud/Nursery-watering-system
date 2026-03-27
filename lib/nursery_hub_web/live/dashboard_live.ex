@@ -417,6 +417,7 @@ defmodule NurseryHubWeb.DashboardLive do
     %ZoneServer{
       site_id:   r.site_id,
       zone_id:   r.zone_id,
+      node_id:   r.node_id,
       last_seen: r.inserted_at,
       moisture:  r.moisture,
       lux:       r.lux,

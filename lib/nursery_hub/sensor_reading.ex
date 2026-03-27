@@ -8,6 +8,7 @@ defmodule NurseryHub.SensorReading do
   schema "sensor_readings" do
     field :site_id,          :string
     field :zone_id,          :string
+    field :node_id,          :string
     field :moisture,         :integer
     field :lux,              :float
     field :leaf_temp,        :float
@@ -29,6 +30,7 @@ defmodule NurseryHub.SensorReading do
     |> Ecto.Changeset.cast(%{
       site_id:          site_id,
       zone_id:          zone_id,
+      node_id:          data["node_id"],
       moisture:         data["moisture"],
       lux:              data["lux"],
       leaf_temp:        data["leaf_temp"],
@@ -40,7 +42,7 @@ defmodule NurseryHub.SensorReading do
       sensor_ok:        Jason.encode!(data["sensor_ok"] || %{}),
       dripper_fault:    data["dripper_fault"],
       dripper_baseline: data["dripper_baseline"]
-    }, [:site_id, :zone_id, :moisture, :lux, :leaf_temp, :air_temp,
+    }, [:site_id, :zone_id, :node_id, :moisture, :lux, :leaf_temp, :air_temp,
         :humidity, :vpd, :watering, :mode, :sensor_ok,
         :dripper_fault, :dripper_baseline])
     |> Repo.insert()

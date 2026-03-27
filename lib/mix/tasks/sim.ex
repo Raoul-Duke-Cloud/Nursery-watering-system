@@ -23,6 +23,18 @@ defmodule Mix.Tasks.Sim do
     {"fitzroy",   ["zone_a", "zone_b", "zone_c", "zone_d"]}
   ]
 
+  # Simulated node (ESP32) asset tags — matches the physical labelling convention
+  @zone_nodes %{
+    {"northcote", "zone_a"} => "ESP-001",
+    {"northcote", "zone_b"} => "ESP-001",
+    {"northcote", "zone_c"} => "ESP-001",
+    {"northcote", "zone_d"} => "ESP-001",
+    {"fitzroy",   "zone_a"} => "ESP-002",
+    {"fitzroy",   "zone_b"} => "ESP-002",
+    {"fitzroy",   "zone_c"} => "ESP-002",
+    {"fitzroy",   "zone_d"} => "ESP-002"
+  }
+
   @zone_seeds %{
     {"northcote", "zone_a"} => %{moisture: 62, air_temp: 22.5, humidity: 58.0, lux: 4200, leaf_temp: 21.0, vpd: 0.82},
     {"northcote", "zone_b"} => %{moisture: 18, air_temp: 23.1, humidity: 55.0, lux: 4100, leaf_temp: 21.8, vpd: 0.91},
@@ -117,6 +129,7 @@ defmodule Mix.Tasks.Sim do
       mode = if key == {"fitzroy", "zone_d"} and rem(tick, 20) < 5, do: "no_vpd", else: "normal"
 
       payload = Jason.encode!(%{
+        "node_id"   => Map.get(@zone_nodes, {site_id, zone_id}, "unknown"),
         "moisture"  => round(moisture),
         "air_temp"  => Float.round(air_temp, 1),
         "humidity"  => Float.round(humidity, 1),

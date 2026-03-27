@@ -1,6 +1,10 @@
 defmodule NurseryHub.MixProject do
   use Mix.Project
 
+  # Nerves hardware targets — deps tagged with `targets: @nerves_targets` are only
+  # included when building Pi firmware (MIX_TARGET=rpi0_2). Normal Mix builds ignore them.
+  @nerves_targets [:rpi0_2]
+
   def project do
     [
       app: :nursery_hub,
@@ -38,7 +42,14 @@ defmodule NurseryHub.MixProject do
       {:ecto_sqlite3, "~> 0.15"},
 
       # Email delivery
-      {:gen_smtp, "~> 1.2"}
+      {:gen_smtp, "~> 1.2"},
+
+      # ── Nerves (Pi firmware builds only — ignored in normal Mix builds) ─────────
+      # Install bootstrap archive once on the build machine:
+      #   mix archive.install hex nerves_bootstrap
+      {:nerves,              "~> 1.10", runtime: false,  targets: @nerves_targets},
+      {:nerves_system_rpi0_2,"~> 1.24", runtime: false,  targets: :rpi0_2},
+      {:nerves_hub_link,     "~> 2.4",                   targets: @nerves_targets}
     ]
   end
 

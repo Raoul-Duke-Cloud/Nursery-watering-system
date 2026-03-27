@@ -220,11 +220,27 @@ Application code is complete and runs on the Pi. Firmware build is pending physi
 - WAN down: Pi buffers locally, local alerts still fire, central shows "WAN down" in topology
 - WAN restore: DataSync pushes all buffered readings, no data gap in history charts
 
-**What's done:** DataSync, ZoneServer, Alerting, SyncController, config/nerves.exs
+**What's done:**
+- DataSync, ZoneServer, Alerting, SyncController — all run on the Pi
+- `config/nerves.exs` — site hub config (SITE_ID, CENTRAL_URL, MQTT, SQLite path)
+- `config/target.exs` — Nerves entry point (imports nerves.exs when MIX_TARGET is set)
+- `mix.exs` — Nerves deps added (`nerves`, `nerves_system_rpi0_2`, `nerves_hub_link`),
+  guarded by `targets: [:rpi0_2]` so they're ignored in normal builds
+- `config/nerves.exs` — NervesHub config with full setup instructions in comments
+
 **What's pending (hardware required):**
-- Add 3 Nerves deps to mix.exs: `nerves`, `nerves_hub_link`, `nerves_system_rpi0_2`
-- Create `config/target.exs`
-- Run `MIX_TARGET=rpi0_2 mix firmware && mix burn`
+- NervesHub account + product setup at nerves-hub.org
+- Generate firmware signing key: `mix nerves_hub.key pair_generate signing-key`
+- First flash: `MIX_TARGET=rpi0_2 mix nerves_hub.device create --identifier HUB-001`
+- `mix firmware && mix burn`
+
+**NervesHub OTA workflow (after first flash):**
+```
+mix firmware                                         # build
+mix nerves_hub.firmware publish --product nursery-hub-pi  # upload to NervesHub
+mix nerves_hub.deployment update [name] --firmware [uuid] # push to fleet
+# Pi downloads + applies on next boot, auto-rolls back if boot fails
+```
 
 When Pi is deployed, ESP32 firmware only needs `MQTT_HOST` and OTA URLs updated to Pi's local IP.
 

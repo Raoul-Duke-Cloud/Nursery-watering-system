@@ -479,15 +479,47 @@ For each zone, verify that the readings are physically plausible. This is the mo
 
 ## Section 12 — NervesHub OTA (Phase 4)
 
-*Complete once all sites are operational and you want remote Pi firmware management.*
+*Complete once all sites are operational and you want remote Pi firmware management. Do this before the first Pi is flashed so the certificate is baked in at first flash.*
 
-- [ ] NervesHub account created at nerves-hub.org
-- [ ] Pi provisioned with NervesHub certificate on first flash (run `mix nerves_hub.device create` during build)
-- [ ] Pi appears in NervesHub device list — confirm device identity
-- [ ] Test OTA update: increment Pi firmware version, `mix firmware && mix nerves_hub.firmware publish`
-- [ ] Deploy update to this Pi from NervesHub dashboard
-- [ ] Pi receives and applies update — reboots and reconnects without physical intervention
-- [ ] Rollback test: build a firmware that deliberately fails to start — confirm Pi auto-rolls back to previous version
+### 12.1 One-time account setup
+
+- [ ] Create account + product at nerves-hub.org — product name: `nursery-hub-pi`
+- [ ] Generate firmware signing key (once per fleet):
+  ```
+  mix nerves_hub.key pair_generate signing-key
+  ```
+- [ ] Add `signing-key.pub` to product in NervesHub web UI
+- [ ] Confirm `signing-key.priv` is NOT committed to git — store securely
+- [ ] Set environment variables for all firmware builds:
+  ```
+  export NERVES_HUB_KEY=path/to/signing-key.priv
+  export NERVES_HUB_ORG=your-org-name
+  ```
+
+### 12.2 First flash — provision device certificate
+
+*Run this once per Pi (replaces a standard `mix firmware && mix burn`):*
+
+- [ ] Run with the Pi's asset tag as identifier:
+  ```
+  MIX_TARGET=rpi0_2 mix nerves_hub.device create --identifier HUB-001
+  mix firmware && mix burn
+  ```
+- [ ] Pi appears in NervesHub device list with correct identifier
+- [ ] Pi connects to NervesHub on first boot — confirmed in NervesHub device status
+
+### 12.3 Test OTA update
+
+- [ ] Increment Pi firmware version (e.g. bump version in `mix.exs`)
+- [ ] Build, sign, and publish:
+  ```
+  MIX_TARGET=rpi0_2 mix firmware
+  mix nerves_hub.firmware publish --product nursery-hub-pi
+  mix nerves_hub.deployment update [deployment-name] --firmware [firmware-uuid]
+  ```
+- [ ] Pi receives update, applies it, reboots, and reconnects — no physical intervention
+- [ ] Dashboard reachable at `http://[pi-ip]:4000` after reboot
+- [ ] Rollback test (optional): build firmware that deliberately fails to start — confirm Pi auto-rolls back to previous version
 
 ---
 

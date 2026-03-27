@@ -204,22 +204,20 @@ This section covers the practical steps to build and flash the first Nerves Pi f
 - A 16GB+ Class 10 microSD card
 - A microSD card reader on your build machine
 
-### Add Nerves dependencies to mix.exs
+### Nerves dependencies (already in the codebase)
 
-When ready to build Pi firmware, add these three deps to `mix.exs`:
-
-```elixir
-{:nerves, "~> 1.10", runtime: false},
-{:nerves_hub_link, "~> 2.0"},                                          # OTA updates via NervesHub (Phase 4)
-{:nerves_system_rpi0_2, "~> 1.0", runtime: false, targets: :rpi0_2},  # Pi Zero 2W system image
-```
-
-Also create a `config/target.exs` that imports the Nerves config:
+The three Nerves deps and `config/target.exs` are already committed to the repo. They are guarded by `targets: [:rpi0_2]` in `mix.exs` so they are completely invisible to normal `mix` builds on Windows — you will only see them when `MIX_TARGET=rpi0_2` is set.
 
 ```elixir
-# config/target.exs
-import_config "nerves.exs"
+# mix.exs — already present
+{:nerves,               "~> 1.10", runtime: false,  targets: [:rpi0_2]},
+{:nerves_system_rpi0_2, "~> 1.24", runtime: false,  targets: :rpi0_2},
+{:nerves_hub_link,      "~> 2.4",                   targets: [:rpi0_2]}
 ```
+
+`config/target.exs` is also already in the repo — it imports `config/nerves.exs` when Nerves builds are active.
+
+No changes to `mix.exs` are required before building Pi firmware.
 
 ### Build the firmware
 
@@ -258,12 +256,52 @@ Nerves detects the SD card automatically and writes the firmware image. Safely e
 
 ### NervesHub provisioning (Phase 4)
 
-Once NervesHub is set up, subsequent firmware updates do not require physical access to the Pi. Steps:
+Once NervesHub is set up, subsequent firmware updates do not require physical access to the Pi.
 
-1. Create an account at nerves-hub.org
-2. Add the `nerves_hub_link` dep to `mix.exs` (already listed above)
-3. Run `mix nerves_hub.device create` to provision the Pi with a certificate on the first flash
-4. All future updates: `mix firmware && mix nerves_hub.firmware publish && mix nerves_hub.deployment update`
+**One-time account setup (do this before first Pi is flashed):**
+
+1. Create account + product at [nerves-hub.org](https://nerves-hub.org)
+   - Product name: `nursery-hub-pi`
+   - Free tier covers up to 5 devices
+
+2. Generate a firmware signing key (once per fleet — store the private key securely):
+   ```
+   mix nerves_hub.key pair_generate signing-key
+   ```
+   - Creates `signing-key.pub` and `signing-key.priv`
+   - Add `signing-key.pub` to the product in the NervesHub web UI
+   - **Never commit `signing-key.priv`** — keep out of git
+
+3. Set environment variables for every firmware build:
+   ```
+   export NERVES_HUB_KEY=path/to/signing-key.priv
+   export NERVES_HUB_ORG=your-org-name
+   ```
+
+**First flash — provision the Pi's device certificate:**
+
+```
+MIX_TARGET=rpi0_2 mix nerves_hub.device create --identifier HUB-001
+```
+
+Use the HUB-NNN asset tag as the identifier so it matches the physical label. This bakes a unique certificate into that specific firmware image.
+
+**Normal workflow after first flash:**
+
+```
+MIX_TARGET=rpi0_2 mix firmware
+mix nerves_hub.firmware publish --product nursery-hub-pi
+mix nerves_hub.deployment update [deployment-name] --firmware [firmware-uuid]
+```
+
+The Pi checks NervesHub on boot and after each WAN reconnect. If a newer firmware is available for its deployment, it downloads and applies it, then reboots. If the new firmware fails to boot, the bootloader automatically rolls back to the previous version — no brick risk.
+
+**What NervesHub provides:**
+- **Device identity** — firmware targets a specific Pi, not broadcast
+- **Delta updates** — sends only changed blocks (important on 4G SIM data budget)
+- **Automatic rollback** — if new firmware fails to boot, Pi restores previous version
+- **Remote IEx console** — SSH-over-HTTPS for live debugging without physical access
+- **Deployment groups** — roll out to one site first, verify, then push to others
 
 ---
 

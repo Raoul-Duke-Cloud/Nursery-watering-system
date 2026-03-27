@@ -64,3 +64,51 @@ config :nursery_hub, :heartbeat_hour, 8
 #   freeze_alert_celsius:   2,
 #   freeze_clear_celsius:   4,
 #   dripper_fault_alert_threshold: 3
+
+# ── NervesHub OTA ──────────────────────────────────────────────────────────────
+#
+# NervesHub manages over-the-air firmware updates for all Pi devices.
+# Once configured, you push a new firmware from your laptop and every Pi
+# in the fleet downloads and applies it automatically — no physical access needed.
+# Each Pi has its own signed certificate baked in at first flash, so the server
+# knows exactly which device it is talking to.
+#
+# ONE-TIME ACCOUNT SETUP (do this before first firmware build):
+#
+#   1. Create account + product at https://nerves-hub.org
+#      Product name: "nursery-hub-pi"
+#
+#   2. Generate a firmware signing key (once per fleet, store securely):
+#        mix nerves_hub.key pair_generate signing-key
+#      This creates signing-key.pub and signing-key.priv in the current dir.
+#      Add signing-key.pub to the product in the NervesHub web UI.
+#      Never commit signing-key.priv — keep it out of git.
+#
+#   3. Set environment variables for each firmware build:
+#        export NERVES_HUB_KEY=path/to/signing-key.priv
+#        export NERVES_HUB_ORG=your-org-name        # shown in NervesHub URL
+#
+#   4. At FIRST FLASH only — provision each Pi's device certificate:
+#        MIX_TARGET=rpi0_2 mix nerves_hub.device create --identifier [HUB-001]
+#      Use the HUB-NNN asset tag as the identifier so it matches your labelling.
+#      This bakes a unique certificate into that specific firmware image.
+#
+#   5. Normal workflow after that — build, sign, publish, deploy:
+#        MIX_TARGET=rpi0_2 mix firmware
+#        mix nerves_hub.firmware publish --product nursery-hub-pi
+#        mix nerves_hub.deployment update [deployment-name] --firmware [firmware-uuid]
+#
+# The Pi checks NervesHub on boot and after each reconnect. If a newer firmware
+# is available for its deployment, it downloads and applies it, then reboots.
+# If the new firmware fails to boot, the bootloader automatically rolls back
+# to the previous version — no brick risk.
+
+config :nerves_hub_link,
+  host: "devices.nerveshub.org",
+  port: 443
+
+# Firmware signing — NervesHub and the device both verify the signature before
+# applying any update. The public key fingerprint is registered in NervesHub's
+# product settings; the private key signs each firmware image at build time.
+config :nerves, :firmware,
+  fwup_public_keys: :nerves_hub

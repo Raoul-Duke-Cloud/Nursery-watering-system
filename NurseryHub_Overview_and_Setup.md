@@ -470,20 +470,31 @@ Everything else — MQTT topics, JSON payload format, dashboard, asset tags, top
 
 ### Build steps (pending hardware)
 
-The Pi application code and Nerves config are complete. The following steps require the physical hardware to be present:
+The Pi application code, Nerves deps, and NervesHub config are all committed to the repo. Nerves deps are guarded by `targets: [:rpi0_2]` in `mix.exs` — they are invisible to normal Windows builds. The following steps require physical hardware:
 
-1. Add Nerves deps to `mix.exs`:
-   ```elixir
-   {:nerves, "~> 1.10", runtime: false},
-   {:nerves_hub_link, "~> 2.4"},
-   {:nerves_system_rpi0_2, "~> 1.24", runtime: false, targets: :rpi0_2}
+1. Install the Nerves bootstrap archive once on the build machine:
    ```
-2. Create `config/target.exs` (imports the existing `config/nerves.exs`)
-3. Set environment variables: `MIX_TARGET=rpi0_2`, `SITE_ID`, `CENTRAL_URL`, `SYNC_API_KEY`
-4. `mix deps.get && mix firmware && mix burn` — writes firmware to SD card
+   mix archive.install hex nerves_bootstrap
+   ```
+2. Set environment variables for the target site:
+   ```
+   export MIX_TARGET=rpi0_2
+   export SITE_ID=site_01
+   export CENTRAL_URL=http://your-central-server.com
+   export SYNC_API_KEY=your_shared_secret_here
+   ```
+3. Fetch deps and build firmware:
+   ```
+   mix deps.get && mix firmware
+   ```
+4. `mix burn` — writes firmware to SD card (Nerves auto-detects the card)
 5. Insert SD card into Pi, power on, verify local dashboard at `http://[pi-ip]:4000`
 
-Full step-by-step commissioning procedure: see **Section 10** of `docs/COMMISSIONING_CHECKLIST.md`.
+**For NervesHub OTA** (so future Pi updates don't need physical access):
+- One-time: create account at nerves-hub.org, generate signing key, provision Pi on first flash with `mix nerves_hub.device create --identifier HUB-001`
+- Ongoing: `mix firmware && mix nerves_hub.firmware publish && mix nerves_hub.deployment update`
+
+Full step-by-step commissioning procedure: see **Section 10–12** of `docs/COMMISSIONING_CHECKLIST.md`.
 Full design specification: see `docs/NERVES_PI_DESIGN.md`.
 
 ---

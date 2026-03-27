@@ -27,6 +27,7 @@ defmodule NurseryHub.Application do
       {Registry, keys: :unique, name: NurseryHub.ZoneRegistry},
       {DynamicSupervisor, name: NurseryHub.ZoneSupervisor, strategy: :one_for_one},
       {NurseryHub.MQTTConnector, [host: mqtt_host, port: mqtt_port]},
+      NurseryHub.Heartbeat,
       NurseryHubWeb.Endpoint
     ]
 

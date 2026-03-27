@@ -9,12 +9,16 @@ config :nursery_hub, :firmware_version, 42
 # Credentials must match the Mosquitto password file.
 # See SECURITY_SETUP.md for how to create the Mosquitto password file.
 config :nursery_hub,
-  mqtt_host:             "localhost",
-  mqtt_port:             1883,
-  mqtt_username:         "nursery_hub",
-  mqtt_password:         "CHANGE_THIS_MQTT_PASSWORD",
-  zone_timeout_minutes:  30,
-  valve_max_open_seconds: 120
+  mqtt_host:              "localhost",
+  mqtt_port:              1883,
+  mqtt_username:          "nursery_hub",
+  mqtt_password:          "CHANGE_THIS_MQTT_PASSWORD",
+  zone_timeout_minutes:   30,
+  valve_max_open_seconds: 120,
+  stuck_moisture_hours:   6,      # alert if moisture unchanged for this long while not watering
+  heartbeat_hour:         8,      # UTC hour to send daily system-alive email (0–23)
+  freeze_alert_celsius:   2,      # send freeze alert and stop all valves at or below this temp
+  freeze_clear_celsius:   4       # clear freeze alert and resume watering at or above this temp
 
 # ── Settings page password ────────────────────────────────────────────────────
 # Required to save any changes on the Settings page.

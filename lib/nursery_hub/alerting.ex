@@ -43,6 +43,14 @@ defmodule NurseryHub.Alerting do
     send_sms("NurseryHub test alert — SMS delivery is working.")
   end
 
+  @doc "Send the daily system-alive heartbeat email with a zone summary."
+  def heartbeat(summary) do
+    subject = "[NurseryHub] Daily heartbeat — system alive"
+    body    = format_heartbeat(summary)
+    Logger.info("[Alerting] Sending daily heartbeat email")
+    send_email(subject, body)
+  end
+
   # ── Formatting ─────────────────────────────────────────────────────────────
 
   defp format_subject(:valve_stuck_open, site_id, zone_id),
@@ -53,6 +61,12 @@ defmodule NurseryHub.Alerting do
     do: "[NurseryHub] Zone offline — #{site_id}/#{zone_id}"
   defp format_subject(:sensor_fault, site_id, zone_id),
     do: "[NurseryHub] Sensor fault — #{site_id}/#{zone_id}"
+  defp format_subject(:freeze_risk, site_id, zone_id),
+    do: "[NurseryHub] URGENT: Freeze risk — #{site_id}/#{zone_id}"
+  defp format_subject(:sensor_out_of_bounds, site_id, zone_id),
+    do: "[NurseryHub] Sensor out-of-bounds reading — #{site_id}/#{zone_id}"
+  defp format_subject(:stuck_moisture, site_id, zone_id),
+    do: "[NurseryHub] Moisture reading stuck — #{site_id}/#{zone_id}"
   defp format_subject(type, site_id, zone_id),
     do: "[NurseryHub] Alert: #{type} — #{site_id}/#{zone_id}"
 
@@ -93,8 +107,71 @@ defmodule NurseryHub.Alerting do
     """
   end
 
+  defp format_body(:freeze_risk, site_id, zone_id, %{air_temp: temp}) do
+    """
+    Freeze risk: #{site_id} / #{zone_id}
+    Air temperature: #{temp}°C — at or below freeze threshold.
+    Watering has been suspended and a stop command sent to the valve.
+
+    Action required: inspect exposed pipework and valves for ice damage.
+    Watering resumes automatically when temperature rises above 4°C.
+    """
+  end
+
+  defp format_body(:sensor_out_of_bounds, site_id, zone_id, %{fields: fields}) do
+    """
+    Out-of-bounds sensor reading: #{site_id} / #{zone_id}
+    Affected fields: #{Enum.join(fields, ", ")}
+    The bad reading has been discarded. Previous known-good value retained.
+
+    Check sensor calibration and wiring. Alert clears automatically on next clean reading.
+    """
+  end
+
+  defp format_body(:stuck_moisture, site_id, zone_id, %{moisture: pct, hours_unchanged: hours}) do
+    """
+    Moisture reading stuck: #{site_id} / #{zone_id}
+    Moisture has read #{pct}% without significant change for #{hours} hours.
+    Zone has not been watering during this period.
+
+    Possible causes: sensor corrosion, salt buildup on capacitive plates, calibration drift.
+    Check sensor and replace if needed. Alert clears when reading changes.
+    """
+  end
+
   defp format_body(type, site_id, zone_id, detail) do
     "Alert #{type} — #{site_id}/#{zone_id}\n#{inspect(detail)}"
+  end
+
+  defp format_heartbeat(%{
+    total:        total,
+    offline_count: offline,
+    alert_count:  alert_count,
+    offline_zones: offline_zones,
+    alert_zones:  alert_zones,
+    sent_at:      sent_at
+  }) do
+    offline_text = if offline == 0, do: "  None", else: Enum.map_join(offline_zones, "\n", &"  #{&1}")
+    alert_text   = if alert_count == 0, do: "  None", else: Enum.map_join(alert_zones, "\n", &"  #{&1}")
+
+    """
+    NurseryHub is alive. Daily status report.
+
+    Sent: #{DateTime.to_string(sent_at)} UTC
+
+    Zones monitored:   #{total}
+    Zones offline:     #{offline}
+    Zones with alerts: #{alert_count}
+
+    Offline zones:
+    #{offline_text}
+
+    Active alerts:
+    #{alert_text}
+
+    ----
+    If you do not receive this email tomorrow at the same time, check that NurseryHub is running.
+    """
   end
 
   defp log_alert(type, body) when type in [:valve_stuck_open, :critical_dry],

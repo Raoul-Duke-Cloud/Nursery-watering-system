@@ -44,7 +44,8 @@ defmodule NurseryHub.ZoneServer do
     :valve_closed_at,        # DateTime valve closed — used to match post-drip readings
     sensor_ok: %{},
     alerts: [],              # list of active alert atoms
-    faulted_sensors: []      # sensors currently in fault — used to debounce sensor_fault alerts
+    faulted_sensors: [],     # sensors currently in fault — used to debounce sensor_fault alerts
+    moisture_last_changed_at: nil  # DateTime when moisture last changed by >=2% — for stuck detection
   ]
 
   # ── Public API ───────────────────────────────────────────────────────────
@@ -104,6 +105,8 @@ defmodule NurseryHub.ZoneServer do
   @impl true
   def handle_cast({:data, data}, state) do
     now = DateTime.utc_now()
+    old_moisture = state.moisture
+    {data, oob_fields} = validate_bounds(data)
     watering_now = data["watering"] == true
 
     new_state = %{state |
@@ -139,7 +142,12 @@ defmodule NurseryHub.ZoneServer do
     # Post-drip moisture check — update event with moisture_after if enough time has passed
     new_state = maybe_record_moisture_after(new_state, data, now)
 
+    new_state = track_moisture_change(new_state, old_moisture, data["moisture"], now)
+
     new_state = new_state
+      |> check_out_of_bounds(oob_fields)
+      |> maybe_clear_stuck_moisture(old_moisture)
+      |> maybe_clear_freeze()
       |> check_sensor_faults()
       |> check_critical_moisture()
       |> clear_offline_alert()
@@ -171,6 +179,8 @@ defmodule NurseryHub.ZoneServer do
     new_state = state
       |> check_zone_timeout()
       |> check_valve_stuck_open()
+      |> check_stuck_moisture()
+      |> check_freeze_risk()
 
     schedule_watchdog()
     {:noreply, new_state}
@@ -260,6 +270,143 @@ defmodule NurseryHub.ZoneServer do
       Logger.info("[#{state.site_id}/#{state.zone_id}] Zone back online")
       AlertLog.resolve(state.site_id, state.zone_id, :zone_offline)
       %{state | alerts: List.delete(state.alerts, :offline)}
+    else
+      state
+    end
+  end
+
+  # ── Bounds validation ─────────────────────────────────────────────────────
+
+  # Physical plausibility limits for each sensor field.
+  # Out-of-bounds values are discarded (set to nil) and an alert is fired.
+  # This catches calibration drift and sensor faults that sensor_ok misses.
+  @bounds %{
+    "air_temp"  => {-10, 60},
+    "humidity"  => {0, 100},
+    "vpd"       => {0, 10},
+    "lux"       => {0, 150_000},
+    "leaf_temp" => {-10, 80},
+    "moisture"  => {0, 100}
+  }
+
+  defp validate_bounds(data) do
+    Enum.reduce(@bounds, {data, []}, fn {field, {min, max}}, {d, oob} ->
+      val = d[field]
+      if is_number(val) and (val < min or val > max) do
+        {Map.put(d, field, nil), [field | oob]}
+      else
+        {d, oob}
+      end
+    end)
+  end
+
+  # Fire alert if any fields were out of bounds. Clear it when a clean reading arrives.
+  defp check_out_of_bounds(state, []) do
+    if :out_of_bounds in state.alerts do
+      AlertLog.resolve(state.site_id, state.zone_id, :sensor_out_of_bounds)
+      %{state | alerts: List.delete(state.alerts, :out_of_bounds)}
+    else
+      state
+    end
+  end
+  defp check_out_of_bounds(state, fields) do
+    if :out_of_bounds not in state.alerts do
+      Alerting.alert(:sensor_out_of_bounds, state.site_id, state.zone_id, %{fields: fields})
+      %{state | alerts: [:out_of_bounds | state.alerts]}
+    else
+      state
+    end
+  end
+
+  # ── Stuck moisture detection ───────────────────────────────────────────────
+
+  # Update moisture_last_changed_at when moisture moves by >=2%.
+  # Called on every incoming reading so the watchdog knows how long it's been stuck.
+  defp track_moisture_change(state, old_moisture, new_moisture, now) do
+    changed =
+      is_number(old_moisture) and is_number(new_moisture) and
+      abs(new_moisture - old_moisture) >= 2.0
+
+    first_reading = is_nil(old_moisture) and is_number(new_moisture)
+
+    if changed or first_reading do
+      %{state | moisture_last_changed_at: now}
+    else
+      state
+    end
+  end
+
+  # If moisture has been stuck and then changes, clear the alert.
+  defp maybe_clear_stuck_moisture(state, old_moisture) do
+    if :stuck_moisture in state.alerts do
+      changed =
+        is_number(old_moisture) and is_number(state.moisture) and
+        abs(state.moisture - old_moisture) >= 2.0
+      if changed do
+        AlertLog.resolve(state.site_id, state.zone_id, :stuck_moisture)
+        %{state | alerts: List.delete(state.alerts, :stuck_moisture)}
+      else
+        state
+      end
+    else
+      state
+    end
+  end
+
+  # Watchdog check — fire if moisture hasn't moved in configured hours while not watering.
+  defp check_stuck_moisture(%{moisture: nil} = state), do: state
+  defp check_stuck_moisture(%{moisture_last_changed_at: nil} = state), do: state
+  defp check_stuck_moisture(state) do
+    threshold_hours = Application.get_env(:nursery_hub, :stuck_moisture_hours, 6)
+    hours_unchanged = DateTime.diff(DateTime.utc_now(), state.moisture_last_changed_at, :hour)
+
+    if hours_unchanged >= threshold_hours and not state.watering and
+       :stuck_moisture not in state.alerts do
+      Alerting.alert(:stuck_moisture, state.site_id, state.zone_id, %{
+        moisture:        state.moisture,
+        hours_unchanged: hours_unchanged
+      })
+      %{state | alerts: [:stuck_moisture | state.alerts]}
+    else
+      state
+    end
+  end
+
+  # ── Freeze protection ─────────────────────────────────────────────────────
+
+  # Called from watchdog every 60s. Fires alert and sends stop command when
+  # air_temp drops to or below freeze_alert_celsius. If freeze is already active
+  # and the valve somehow opens, re-sends the stop command.
+  defp check_freeze_risk(%{air_temp: nil} = state), do: state
+  defp check_freeze_risk(state) do
+    threshold = Application.get_env(:nursery_hub, :freeze_alert_celsius, 2)
+
+    cond do
+      state.air_temp <= threshold and :freeze_risk not in state.alerts ->
+        Alerting.alert(:freeze_risk, state.site_id, state.zone_id, %{air_temp: state.air_temp})
+        send_command(state.site_id, state.zone_id, %{cmd: "stop"})
+        %{state | alerts: [:freeze_risk | state.alerts]}
+
+      :freeze_risk in state.alerts and state.watering ->
+        # Freeze still active — keep suppressing any valve that opened
+        send_command(state.site_id, state.zone_id, %{cmd: "stop"})
+        state
+
+      true ->
+        state
+    end
+  end
+
+  # Called on every incoming reading. Clears freeze alert once temp recovers
+  # above freeze_clear_celsius (hysteresis prevents rapid alert flip-flopping).
+  defp maybe_clear_freeze(%{air_temp: nil} = state), do: state
+  defp maybe_clear_freeze(state) do
+    clear_threshold = Application.get_env(:nursery_hub, :freeze_clear_celsius, 4)
+
+    if :freeze_risk in state.alerts and state.air_temp >= clear_threshold do
+      Logger.info("[#{state.site_id}/#{state.zone_id}] Freeze cleared — temp #{state.air_temp}°C")
+      AlertLog.resolve(state.site_id, state.zone_id, :freeze_risk)
+      %{state | alerts: List.delete(state.alerts, :freeze_risk)}
     else
       state
     end

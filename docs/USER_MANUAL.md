@@ -58,21 +58,43 @@ You will be asked to log in with a username and password. Your administrator wil
 
 ## The Topology page — start here when something goes wrong
 
-The Topology page (`/topology`, or click **Topology** in the header) is a live map of all equipment in the system:
+The Topology page (`/topology`, or click **Topology** in the header) is a live map of all equipment in the system, arranged as a hierarchy:
 
-- The central server at the top
-- Each site as a block, colour-coded by its worst current status
-- Every zone as a card within its site, showing moisture, temperature, status, and any active alerts
+```
+Central Server
+└── Site (e.g. northcote)
+    └── ESP-001  ·  ESP32 node
+        ├── [DHT-001 · DHT22 · 22.5°C / 58% ●]  [LUX-001 · BH1750 · 4.2k ●]  [IR-001 · MLX · 21.0°C ●]
+        ├── zone_a  —  MST-001  62%  ●
+        └── zone_b  —  MST-002  18%  ●
+```
+
+Each node shows its shared sensors (temperature, humidity, light, leaf temp) across the top, with their asset tags and current values. A green dot means the sensor is working. A red pulsing dot means a fault.
+
+Below the shared sensors are the zone cards, each showing the moisture probe asset tag, current moisture reading, and the moisture bar.
 
 **This is how you locate a fault in the field:**
 
-1. Open the Topology page — find the red, yellow, or orange card
-2. Note the component IDs shown on the card
-3. Go to the physical site — find the enclosure with the `ESP-XXX` ID shown in the software
-4. Find the sensor or valve with the `VLV-XXX` / `MST-XXX` ID shown in the software
-5. That is the hardware behind what you saw on screen
+1. Open the Topology page — find the red, yellow, or orange item
+2. Note the asset tag shown (e.g. `ESP-003`, `MST-009`, `DHT-003`)
+3. Go to the physical site — find the hardware with that ID label
+4. That is the hardware behind what you saw on screen
 
-The Topology page is the authoritative record of all equipment known to the system. Once a zone connects for the first time it appears here and stays until explicitly removed.
+The Topology page is the authoritative record of all equipment. Once a device connects for the first time it appears here and stays until explicitly removed.
+
+---
+
+## Registering a new device
+
+When an ESP32 is powered on for the first time it appears in the Topology page as an **Unregistered** node (shown in orange), identified by its hardware chip ID. You assign human-readable asset tags to it once through the Topology page — no firmware changes needed.
+
+1. Open the **Topology page**
+2. Find the orange **Unregistered · AABBCC001122** node — click **Register →**
+3. The form opens with the next available number pre-filled for every tag field
+4. Confirm or adjust the values, then click **Save**
+5. The node immediately shows with its assigned tags and all sensor readings
+
+The assigned numbers persist permanently in the server. If a device is replaced, the old tags stay in the database and the new hardware gets new numbers.
 
 ---
 

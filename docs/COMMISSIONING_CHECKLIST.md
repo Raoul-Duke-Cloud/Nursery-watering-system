@@ -170,7 +170,7 @@ Sensors are the most fragile and most expensive-to-replace components. These che
 
 ### 3.1 Configuration
 
-Open `esp32_firmware/ESP32_Plant_Monitor_v4/ESP32_Plant_Monitor_v4.ino` and confirm:
+Open `esp32_firmware/ESP32_Plant_Monitor_v5/ESP32_Plant_Monitor_v5.ino` and confirm:
 
 - [ ] `SITE_ID` set to correct unique site identifier: ___________________________
 - [ ] `NUM_ZONES` set correctly for this ESP32: _______
@@ -184,6 +184,8 @@ Open `esp32_firmware/ESP32_Plant_Monitor_v4/ESP32_Plant_Monitor_v4.ino` and conf
 - [ ] `OTA_VERSION_URL` and `OTA_FIRMWARE_URL` point to correct server (Pi if deployed; central otherwise)
 - [ ] `FIRMWARE_VERSION` recorded: ___________________________
 - [ ] `DUAL_MOISTURE` set correctly (`true` if ADS1115 fitted, `false` if single moisture sensor per zone)
+
+> **Note:** `NODE_ID` and sensor ID defines (`SENSOR_ID_DHT`, `SENSOR_ID_MST[]`, etc.) are **not configured in firmware**. The device is identified by its hardware chip ID (derived from MAC address) and asset tags are assigned through the Topology page after first boot.
 
 ### 3.2 Flash
 
@@ -203,6 +205,28 @@ Open `esp32_firmware/ESP32_Plant_Monitor_v4/ESP32_Plant_Monitor_v4.ino` and conf
 | ESP32 #2 | | | [ ] | [ ] | [ ] |
 | ESP32 #3 | | | [ ] | [ ] | [ ] |
 | ESP32 #4 | | | [ ] | [ ] | [ ] |
+
+### 3.4 Device Registration — Assign Asset Tags
+
+After each ESP32 is powered and connected, register it through the Topology page. Asset tags are assigned here once and stored permanently in the server — no firmware changes needed.
+
+For each ESP32 node:
+
+- [ ] Open Topology page (`/topology`) — confirm node appears as orange **Unregistered · [chip_id]**
+- [ ] Click **Register →** — confirm form opens with next available tag numbers pre-filled
+- [ ] Verify or adjust the suggested numbers match the labels physically applied to the hardware:
+  - Node tag (enclosure label): ___________________________
+  - DHT22 tag: ___________________________  BH1750 tag: ___________________________  MLX tag: ___________________________
+  - Moisture probes: zone_a _________  zone_b _________  zone_c _________  zone_d _________
+- [ ] Click **Save** — confirm node immediately shows with assigned tags (orange banner gone)
+- [ ] Confirm sensor asset tags appear on zone cards and in the shared sensors row
+
+| ESP32 | Chip ID | Node tag assigned | Sensors registered |
+|---|---|---|---|
+| ESP32 #1 | | | [ ] |
+| ESP32 #2 | | | [ ] |
+| ESP32 #3 | | | [ ] |
+| ESP32 #4 | | | [ ] |
 
 ---
 
@@ -311,8 +335,11 @@ For each zone, verify that the readings are physically plausible. This is the mo
 
 - [ ] Topology page (`/topology`) loads and shows the central server node
 - [ ] All commissioned sites appear as blocks in the Topology view
-- [ ] All expected zones appear as cards under their site
+- [ ] All ESP32 nodes show with assigned asset tags (e.g. `ESP-001`) — no orange **Unregistered** nodes remaining
+- [ ] Shared sensor row visible on each node: DHT-NNN, LUX-NNN, IR-NNN tags shown with live readings and green status dots
+- [ ] Each zone card shows moisture probe tag (MST-NNN) beside the moisture bar
 - [ ] All zone cards show status `online` (green) — no red or yellow cards
+- [ ] Sensor fault indicators: cover a sensor — confirm fault dot appears in topology within ~35s; uncover — confirms it clears
 - [ ] Topology updates live — watch a zone card, confirm readings change within ~35s
 - [ ] Click a zone card — confirms it navigates to the zone detail page
 - [ ] All zones show status `online` in the table view (`/`)

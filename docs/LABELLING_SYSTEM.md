@@ -2,7 +2,7 @@
 
 Labels identify **what the component is** — nothing else. No location, no node, no zone assignment in the number. Where a component lives and what it connects to is recorded in the software (Topology page). If you move a component, only the software needs updating. The label never changes.
 
-The label is a permanent asset tag. The Topology page is the map.
+The label is a permanent asset tag. The Topology page is the map. Asset tags are **assigned through the Topology page** — never configured in firmware. The next available number for each prefix is suggested automatically when you register a new device.
 
 ---
 
@@ -140,11 +140,32 @@ I2C-SDA | I2C-SCL | DHT | LUX | IR
 
 ---
 
+## How to assign tags to a new device
+
+When an ESP32 is powered on for the first time it appears in the Topology page as **Unregistered** with its hardware chip ID (a 12-character hex string derived from its MAC address). This is the device's permanent, immutable identity.
+
+To assign human-readable asset tags:
+
+1. Open the **Topology page** (`/topology`)
+2. Find the orange **Unregistered** node — click **Register →**
+3. The form opens with the next available tag pre-filled for each field:
+   - **Node tag** — the label on the enclosure (e.g. `ESP-003`)
+   - **DHT22, BH1750, MLX** — the labels on the shared sensors
+   - **Moisture probes** — one per zone slot, in order
+4. Confirm or adjust the numbers and click **Save**
+5. The node immediately shows with its assigned tags
+
+The suggested numbers are calculated automatically from all existing assignments — the system finds the highest number in use for each prefix (ESP, DHT, LUX, IR, MST) and suggests the next one.
+
+If you need to correct a tag (e.g. wrong number applied to a label), click **Register →** again on that node — the form pre-fills with the current values and you can update them.
+
+---
+
 ## How to positively identify hardware in the field
 
 1. An alert or event appears on screen — open the **Topology page** (`/topology`)
-2. Find the zone card showing the fault. The software shows which ESP32 node it belongs to and its current location.
-3. Go to the field — find the enclosure, valve, or sensor with the ID shown in the software.
+2. Find the zone or sensor showing the fault. Note the asset tag shown (e.g. `ESP-003`, `MST-009`, `DHT-003`).
+3. Go to the field — find the enclosure, valve, or sensor with that ID label.
 4. You are looking at the hardware behind the fault.
 
 The Topology page is the equipment register — every component appears from first connection and persists until explicitly decommissioned. The software is always the source of truth for where a component is. The label is just the permanent identity of the thing itself.

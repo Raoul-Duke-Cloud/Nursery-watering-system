@@ -50,6 +50,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 | `nursery_hub/data_sync.ex` | GenServer — site Pi only; polls central /api/sync/health every 60s; pushes buffered readings in batches of 100; exponential backoff on failure; inactive (`:ignore`) on central server |
 | `nursery_hub/alert_log.ex` | Ecto schema + queries for the alert log table |
 | `nursery_hub/sensor_reading.ex` | Ecto schema + insert for sensor readings |
+| `nursery_hub/device_assignment.ex` | Ecto schema — maps chip_id (MAC-derived hardware ID) to asset tags (node_tag + sensor_tags JSON); `next_tag/1` and `next_tags/2` suggest next sequential numbers |
 | `nursery_hub/watering_event.ex` | Ecto schema — open/close watering events, moisture_before/after, duration_ms, trigger, dripper_fault |
 | `nursery_hub/consumption.ex` | Water consumption tracking |
 | `nursery_hub/settings.ex` | Loads/saves settings from SQLite (email, SMS, alert routing, OTA version) |
@@ -60,7 +61,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 | File | URL | What it does |
 |---|---|---|
 | `dashboard_live.ex` | `/` | Main table — all zones, live updates via PubSub, filters (site/zone/status/mode/sensor ranges), CSV download, Water/Stop/History actions |
-| `topology_live.ex` | `/topology` | Visual equipment map — central server → sites → zone cards, colour-coded by status, live updates, click to drill into zone detail. Authoritative equipment register. |
+| `topology_live.ex` | `/topology` | Visual equipment map — central server → sites → ESP32 nodes → shared sensor pills (DHT/LUX/IR with asset tags + ok/fault dots) → zone cards with moisture probe tags. Unregistered devices show chip_id in orange with inline Register form; form pre-fills next sequential tag numbers. Authoritative equipment register. |
 | `zone_live.ex` | `/zone/:site/:zone` | Per-zone history — moisture + VPD charts, date range picker, watering events table, CSV export |
 | `logs_live.ex` | `/logs` | Alert log — all/active/resolved filter, colour-coded alert type badges |
 | `settings_live.ex` | `/settings` | Email (SMTP), SMS (Twilio), alert routing per alert type, OTA firmware version, test email/SMS buttons |
@@ -103,6 +104,8 @@ ZoneServer holds all of this in its GenServer state:
 ```elixir
 %NurseryHub.ZoneServer{
   site_id, zone_id,
+  chip_id,            # Raw hardware ID from ESP32 MAC e.g. "A4CF12345678" — immutable
+  node_id,            # Resolved asset tag e.g. "ESP-001" (from DeviceAssignment) or chip_id if unregistered
   last_seen,          # DateTime — nil until first data
   moisture,           # 0–100%
   lux,                # light level
@@ -115,10 +118,13 @@ ZoneServer holds all of this in its GenServer state:
   pending_check_event_id, # watering event waiting for post-drip moisture check
   valve_closed_at,    # used to time the post-drip moisture reading (1–5 min window)
   sensor_ok: %{},     # map of sensor_name => boolean
+  sensor_ids: %{},    # resolved asset tags: %{"moisture"=>"MST-001","dht"=>"DHT-001",...}
   alerts: [],         # active alert atoms: :offline, :valve_stuck, :sensor_fault, :critical_dry
   faulted_sensors: [] # debounce — only fires alert when fault set changes
 }
 ```
+
+Identity resolution: when a message arrives with `chip_id`, ZoneServer looks up DeviceAssignment and caches the resolved node_id + sensor_ids. Re-resolution is triggered by `ZoneServer.reassign/2` after a Topology page save.
 
 Zone status derived from state for the dashboard:
 - `online` — last_seen within 30 min, no active alerts
@@ -146,10 +152,11 @@ Routing is configurable per type in Settings → Alert Routing.
 ## Database (SQLite — `priv/nursery_hub.db`)
 
 Tables:
-- `sensor_readings` — every reading from every zone (site_id, zone_id, timestamps, all sensor values)
+- `sensor_readings` — every reading from every zone (site_id, zone_id, node_id, timestamps, all sensor values)
 - `watering_events` — open/close pairs with trigger, duration_ms, moisture_before, moisture_after, moisture_rise, dripper_fault, dripper_baseline
 - `alert_logs` — all alerts with resolved_at (null if still active)
 - `settings` — single-row key/value store for email/SMS/routing/OTA config
+- `device_assignments` — maps chip_id → node_tag + sensor_tags JSON (e.g. `{"dht":"DHT-001","lux":"LUX-001","moisture_0":"MST-001",...}`)
 
 ---
 
@@ -163,9 +170,10 @@ Tables:
 
 ---
 
-## ESP32 firmware (`esp32_firmware/ESP32_Plant_Monitor_v4.ino`)
+## ESP32 firmware (`esp32_firmware/ESP32_Plant_Monitor_v5/`)
 
-Key config at top of file:
+Key config at top of file — only `SITE_ID` and hardware pin assignments need changing per device. **No NODE_ID or sensor tag defines** — asset tags are assigned server-side through the Topology page.
+
 ```cpp
 #define NUM_ZONES 4               // 1–4 per ESP32
 #define SITE_ID   "northcote"    // unique name
@@ -175,6 +183,8 @@ const char* ZONE_IDS[]    = { "zone_a", "zone_b", "zone_c", "zone_d" };
 const int MOISTURE_PINS[] = { 32, 33, 34, 35 };
 const int RELAY_PINS[]    = { 25, 26, 13, 14 };
 ```
+
+Every payload includes `chip_id` (12-char hex from `ESP.getEfuseMac()`) and `zone_index` (0–3). The server resolves these to human-readable asset tags via DeviceAssignment.
 
 Shared sensors: DHT22 (GPIO27), BH1750 + MLX90614 (I2C GPIO21/22), MicroSD (SPI GPIO5/23/19/18).
 

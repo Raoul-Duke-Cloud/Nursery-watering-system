@@ -310,8 +310,8 @@ the solenoid, and the valve opens. When LOW, valve closes.
    - `DHT sensor library` (by Adafruit)
    - `PubSubClient` (by Nick O'Leary)
    - `ArduinoJson` (by Benoit Blanchon)
-5. Open `nursery_hub\esp32_firmware\ESP32_Plant_Monitor_v4.ino`
-6. At the top, configure for your ESP32:
+5. Open `nursery_hub\esp32_firmware\ESP32_Plant_Monitor_v5\ESP32_Plant_Monitor_v5.ino`
+6. At the top, configure for your ESP32 — only these values need changing per device:
    ```cpp
    #define NUM_ZONES 4               // 1, 2, 3, or 4
    #define SITE_ID   "northcote"     // unique name for this site
@@ -320,6 +320,7 @@ the solenoid, and the valve opens. When LOW, valve closes.
    const int MOISTURE_PINS[] = { 32, 33, 34, 35 };  // match your wiring
    const int RELAY_PINS[]    = { 25, 26, 13, 14 };  // match your wiring
    ```
+   > **Note:** Asset tags (ESP-NNN, MST-NNN, DHT-NNN, etc.) are **not configured in firmware**. The device is identified by its hardware chip ID (derived from its MAC address). You assign asset tags through the Topology page after first boot — see Step 5.
 7. Leave `#define TEST_MODE true` for initial testing
 8. Plug ESP32 into USB → Tools → Board → ESP32 Dev Module
 9. Tools → Port → select your COM port → Upload
@@ -412,7 +413,7 @@ Zones appear in the dashboard table automatically as each ESP32 connects for the
    place a compiled `.bin` in `priv/static/firmware/`, restart NurseryHub.
    Reboot the ESP32 — it should download and flash the new firmware automatically.
 
-7. **Add more ESP32s** — they register in the dashboard automatically.
+7. **Add more ESP32s** — they appear in the Topology page as **Unregistered** nodes. Click **Register →** to assign asset tags (ESP-NNN, MST-NNN, DHT-NNN, etc.). The next available numbers are pre-filled automatically.
 
 ---
 
@@ -425,9 +426,24 @@ Zones appear in the dashboard table automatically as each ESP32 connects for the
 
 Go to **http://localhost:4000/topology** (or click **Topology** in the dashboard header).
 
-Shows the full equipment hierarchy as a visual map: central server at the top, each site as a block below it, each zone as a card within its site. Cards are colour-coded by status. Use this when something goes wrong — find the fault on screen, read the component ID from the software, then go to the field and find the hardware with that ID on its label.
+Shows the full equipment hierarchy as a visual map:
 
-The topology view updates live via WebSocket. It is the authoritative register of all equipment currently known to the system.
+```
+Central Server
+└── Site (northcote)
+    └── ESP-001  ·  ESP32 node
+        ├── [DHT-001 · DHT22 · 22.5°C / 58% ●]  [LUX-001 · BH1750 · 4.2k ●]  [IR-001 · MLX · 21.0°C ●]
+        ├── zone_a  MST-001  62%  ●
+        └── zone_b  MST-002  18%  ●
+```
+
+Each node shows its shared sensors (DHT22, BH1750, MLX) with asset tags, live readings, and a status dot (green = ok, red = fault). Zone cards show the moisture probe tag and reading. Everything updates live.
+
+**When a new device connects for the first time** it appears as an orange **Unregistered** node. Click **Register →** to assign asset tags — the next available numbers are pre-filled automatically based on existing assignments.
+
+Use this page when something goes wrong — find the fault on screen, read the asset tag from the software, then go to the field and find the hardware with that ID label.
+
+The topology view is the authoritative register of all equipment known to the system.
 
 ### Dashboard table
 

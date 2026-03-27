@@ -30,9 +30,29 @@ If the moisture doesn't rise after watering, the system tries again. If repeated
 
 ## During an internet outage
 
-If the internet connection drops, the system keeps running on the local network. Sensors keep talking to the local hub at the site — they have no idea the internet is gone. The hub keeps recording everything and can still send email alerts. If you're on-site, you can check the dashboard as normal at the Pi's local address.
+What happens during an outage depends on whether a Nerves Pi hub is deployed at the site.
 
-When the internet comes back, the hub automatically sends everything it recorded to the central server. There are no gaps in your data — it catches up quietly in the background.
+### Sites with a Nerves Pi (recommended)
+
+The ESP32 sensors connect to the Pi locally over WiFi — they have no idea the internet is gone and keep sending readings every 30 seconds as normal. The Pi records everything to its local database and continues running all watchdogs and alerts. If you are physically on-site, the Pi's own dashboard at `http://[pi-ip]:4000` is fully available.
+
+On the central dashboard, the affected site's block in the Topology page shows **WAN down**. Zone readings freeze at their last known values — this is expected, not a fault.
+
+When the internet comes back, the Pi's DataSync automatically pushes all buffered readings to the central server in batches. The history charts fill in the gap with no missing data. The WAN indicator returns to green.
+
+**From your point of view: nothing to do. The system handled it.**
+
+### Sites without a Nerves Pi
+
+ESP32s connect directly to the central server over 4G. If the 4G link drops:
+- Sensor readings are not received at the central server during the outage
+- No alerts fire during the outage (the central server can't see the site)
+- Any readings taken while the link is down are permanently lost
+- Zones appear `offline` on the dashboard after 30 minutes
+
+The ESP32s themselves keep running their local watering schedule autonomously — plants are still watered. But you have no visibility and no alerting until the link restores.
+
+Deploying a Nerves Pi at each site eliminates this gap. See the setup guide for details.
 
 ---
 
@@ -227,7 +247,11 @@ Do not leave a stuck-open valve unattended.
 
 ### All zones at one site offline at once
 
-The site's 4G connection is likely down. Check the 4G router has power and signal. The zones will continue watering on their own internal schedule — the system is designed to keep running without the server. When the connection restores, all data syncs automatically.
+The site's 4G connection is likely down. Check the 4G router has power and signal.
+
+**If the site has a Nerves Pi:** the Topology page shows **WAN down** for that site. Zones continue operating normally on the Pi — data is being recorded locally and will sync when the link restores. No action needed unless the outage is prolonged.
+
+**If the site has no Pi:** the zones are running on their own internal watering schedule and data is being lost. Check the 4G router. When the connection restores the zones will reappear but any readings taken during the outage are gone.
 
 ### Cannot load the dashboard at all
 

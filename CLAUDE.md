@@ -47,7 +47,7 @@ If port 4000 is already in use: `taskkill /IM beam.smp.exe /F`
 | `nursery_hub/mqtt_handler.ex` | Parses MQTT payloads, routes data to zone processes |
 | `nursery_hub/alerting.ex` | Sends email (gen_smtp) and SMS (Twilio HTTP) alerts; routing configured per alert type in settings; also sends daily heartbeat email |
 | `nursery_hub/heartbeat.ex` | GenServer — sends daily system-alive email at configured UTC hour; includes zone summary (total/offline/alerts) |
-| `nursery_hub/data_sync.ex` | GenServer — site Pi only; polls central /api/sync/health every 60s; pushes buffered readings in batches of 100; exponential backoff on failure; inactive (`:ignore`) on central server |
+| `nursery_hub/data_sync.ex` | GenServer — site Pi only; polls central /api/sync/health every 60s; pushes buffered readings in batches of 100; exponential backoff on failure; inactive (`:ignore`) on central server. Drives the WAN up/down indicator shown in Topology. |
 | `nursery_hub/alert_log.ex` | Ecto schema + queries for the alert log table |
 | `nursery_hub/sensor_reading.ex` | Ecto schema + insert for sensor readings |
 | `nursery_hub/device_assignment.ex` | Ecto schema — maps chip_id (MAC-derived hardware ID) to asset tags (node_tag + sensor_tags JSON); `next_tag/1` and `next_tags/2` suggest next sequential numbers |
@@ -206,6 +206,27 @@ Key settings to change before going live:
 - `secret_key_base` — regenerate with `mix phx.gen.secret`
 - `zone_timeout_minutes` — default 30
 - `valve_max_open_seconds` — default 120
+
+---
+
+## Nerves Pi — site hub (Phase 2)
+
+Application code is complete and runs on the Pi. Firmware build is pending physical hardware.
+
+**Expected operation:**
+- ESP32s connect to Mosquitto running on the Pi (not directly to central)
+- Pi runs full NurseryHub app locally — same ZoneServer, watchdogs, alerting
+- DataSync pushes to central in near real-time when WAN is up
+- WAN down: Pi buffers locally, local alerts still fire, central shows "WAN down" in topology
+- WAN restore: DataSync pushes all buffered readings, no data gap in history charts
+
+**What's done:** DataSync, ZoneServer, Alerting, SyncController, config/nerves.exs
+**What's pending (hardware required):**
+- Add 3 Nerves deps to mix.exs: `nerves`, `nerves_hub_link`, `nerves_system_rpi0_2`
+- Create `config/target.exs`
+- Run `MIX_TARGET=rpi0_2 mix firmware && mix burn`
+
+When Pi is deployed, ESP32 firmware only needs `MQTT_HOST` and OTA URLs updated to Pi's local IP.
 
 ---
 

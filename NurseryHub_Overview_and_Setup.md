@@ -386,6 +386,108 @@ Zones appear in the dashboard table automatically as each ESP32 connects for the
 
 ---
 
+---
+
+## Phase 2 — Nerves Pi site hub
+
+> **Status:** Software is complete. Firmware build requires the physical hardware to be present. See `docs/NERVES_PI_DESIGN.md` for the full design specification.
+
+### What the Pi does
+
+Without a Pi, each site's ESP32s connect directly to the central server over 4G. If the 4G link drops, all monitoring and alerting for that site stops. Any readings taken during the outage are lost permanently.
+
+A Nerves Pi at each site changes that. The ESP32s talk to the Pi locally over WiFi — they never care whether the internet is up or down. The Pi runs its own copy of the NurseryHub application, stores all readings locally, and syncs to the central server whenever the link is available.
+
+```
+WITHOUT PI (current)                    WITH PI (Phase 2)
+
+ESP32 ──── 4G ────▶ Central server      ESP32 ──── WiFi ──▶ Pi (local)
+                                                             │   local MQTT
+If 4G drops:                                                 │   local SQLite
+  - data lost                                                │   local alerts
+  - no alerts                                                │   DataSync
+  - no visibility                                       [4G] │
+                                                             ▼
+                                                       Central server
+                                                         full dashboard
+                                                         all sites
+```
+
+### Normal operation (WAN available)
+
+1. ESP32s publish sensor data to Mosquitto running on the Pi every 30 seconds
+2. Pi's NurseryHub app processes readings — runs watchdogs, checks faults, saves to local SQLite
+3. DataSync (running on the Pi) pushes each reading to the central server in near real-time
+4. Central dashboard shows all zones live — no visible difference to the operator
+
+### WAN down
+
+1. 4G link drops — Pi detects this within 60 seconds via health probe to central server
+2. ESP32s keep publishing to Pi as normal — they never see the outage
+3. Pi continues processing and storing all readings locally
+4. Local alerting fires for any faults during the outage (email via Pi's own SMTP relay)
+5. DataSync stops trying to push data and buffers the queue
+6. Central dashboard topology shows **WAN down** for the affected site
+7. If you are on-site, the Pi's own dashboard at `http://[pi-ip]:4000` is fully operational
+
+### WAN restore
+
+1. 4G link restores — DataSync detects this within 60–90 seconds
+2. Buffered readings pushed to central server in batches of 100
+3. Central dashboard history charts fill in the gap — no data missing
+4. Topology WAN indicator returns to green
+5. Normal sync resumes
+
+### Hardware required (per site)
+
+| Component | Cost | Notes |
+|---|---|---|
+| Raspberry Pi Zero 2W | ~$20 | Built-in WiFi, low power, sufficient for Elixir/OTP |
+| MicroSD card (8GB+) | ~$10 | Class 10 or better |
+| 5V/2A micro-USB supply | ~$5 | Powered from site 12V → 5V buck rail |
+
+One Pi per site regardless of zone count. For a site with 8 zones (2 ESP32s) the total addition is ~$35.
+
+### What changes when the Pi is deployed
+
+The only firmware change required per ESP32 is the MQTT host address. Currently ESP32s point to the central server IP. With a Pi in place, they point to the Pi's local IP instead:
+
+```cpp
+// Without Pi — points to central server or VPN tunnel
+#define MQTT_HOST "192.168.1.100"
+
+// With Pi — points to Pi's local IP on site network
+#define MQTT_HOST "192.168.1.10"   // Pi's local IP
+```
+
+The OTA URL also moves to the Pi so firmware updates are served locally:
+```cpp
+#define OTA_VERSION_URL "http://192.168.1.10:4000/api/ota/version"
+#define OTA_FIRMWARE_URL "http://192.168.1.10:4000/firmware/esp32_plant_monitor.bin"
+```
+
+Everything else — MQTT topics, JSON payload format, dashboard, asset tags, topology — is identical.
+
+### Build steps (pending hardware)
+
+The Pi application code and Nerves config are complete. The following steps require the physical hardware to be present:
+
+1. Add Nerves deps to `mix.exs`:
+   ```elixir
+   {:nerves, "~> 1.10", runtime: false},
+   {:nerves_hub_link, "~> 2.4"},
+   {:nerves_system_rpi0_2, "~> 1.24", runtime: false, targets: :rpi0_2}
+   ```
+2. Create `config/target.exs` (imports the existing `config/nerves.exs`)
+3. Set environment variables: `MIX_TARGET=rpi0_2`, `SITE_ID`, `CENTRAL_URL`, `SYNC_API_KEY`
+4. `mix deps.get && mix firmware && mix burn` — writes firmware to SD card
+5. Insert SD card into Pi, power on, verify local dashboard at `http://[pi-ip]:4000`
+
+Full step-by-step commissioning procedure: see **Section 10** of `docs/COMMISSIONING_CHECKLIST.md`.
+Full design specification: see `docs/NERVES_PI_DESIGN.md`.
+
+---
+
 ## Testing order (recommended)
 
 1. **Boot self-test** — plug ESP32 in via USB, open Serial Monitor (115200 baud).

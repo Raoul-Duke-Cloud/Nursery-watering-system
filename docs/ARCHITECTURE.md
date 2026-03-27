@@ -35,7 +35,9 @@ ESP32 (site_02, zones A–D)             │
 
 ---
 
-## Planned topology — Nerves Pi at each site
+## Phase 2 topology — Nerves Pi at each site
+
+> **Implementation status:** Application code complete (DataSync, ZoneServer, Alerting, SyncController all run on the Pi). Nerves firmware build requires physical hardware — three mix.exs deps and `config/target.exs` remain. See `NurseryHub_Overview_and_Setup.md` for the build steps.
 
 ```
 NURSERY SITES                          CENTRAL SERVER (PC, RPi, or VPS)

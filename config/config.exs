@@ -21,6 +21,11 @@ config :nursery_hub,
   freeze_clear_celsius:          4,   # clear freeze alert and resume watering at or above this temp
   dripper_fault_alert_threshold: 3    # consecutive dripper_fault events before firing dripper_degraded alert
 
+# ── Sync API key ─────────────────────────────────────────────────────────────
+# Shared secret between site Pi DataSync and the central server sync API.
+# Set the same value on both ends. Change before going live.
+config :nursery_hub, :sync_api_key, "CHANGE_THIS_SYNC_API_KEY"
+
 # ── Settings page password ────────────────────────────────────────────────────
 # Required to save any changes on the Settings page.
 # Change this before going live. Stored here alongside all other credentials.

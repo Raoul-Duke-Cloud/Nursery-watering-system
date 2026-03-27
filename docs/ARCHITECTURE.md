@@ -179,6 +179,22 @@ A secondary moisture sensor per zone also enables validation of the dripper_faul
 
 ---
 
+## Operating modes
+
+The ESP32 firmware sets an operating mode based on which sensors are currently working. The mode is included in every MQTT payload and recorded by the Elixir server. It is shown in the zone row on the dashboard.
+
+| Mode | Meaning | Watering behaviour |
+|---|---|---|
+| `normal` | All sensors working | Watering decisions use moisture reading and VPD together |
+| `no_vpd` | BH1750 (light) or DHT22 (temp/humidity) failed — VPD cannot be calculated | Watering decisions based on moisture alone; zone continues operating |
+| `no_moisture` | Moisture sensor failed or reading out of bounds | Zone switches to time-based fallback schedule (fixed duration at fixed intervals); no moisture-based decisions |
+| `local` | WiFi or MQTT connection lost | ESP32 running fully autonomously on its own internal schedule; server has no visibility until connection restores |
+| `unknown` | First reading not yet received, or mode field missing from payload | — |
+
+A zone stuck in `local` mode for an extended period will trigger a `zone_offline` alert via the server-side watchdog, since no data arrives at the server while the ESP32 is operating locally.
+
+---
+
 ## OTA firmware updates
 
 ### ESP32 firmware

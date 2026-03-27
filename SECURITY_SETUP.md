@@ -13,6 +13,7 @@ any site to the live system.
 - [ ] Change dashboard password in config.exs
 - [ ] Regenerate Phoenix secret keys
 - [ ] Set up VPN between sites and server (recommended)
+- [ ] Set sync API key on central server and site Pi
 
 ---
 
@@ -169,6 +170,36 @@ even if someone scans the internet they cannot find or connect to it.
 
 ---
 
+## Step 7 — Set the sync API key
+
+The sync API (`POST /api/sync/readings`) is how site Pi devices push buffered readings to the central server. Without authentication, anyone who knows the URL could inject fake readings.
+
+**On the central server** — edit `config/config.exs`:
+```elixir
+config :nursery_hub, :sync_api_key, "your_strong_random_key_here"
+```
+
+Generate a random key:
+```bash
+mix phx.gen.secret 32
+```
+(copy the output as your key)
+
+**On each site Pi** — set the environment variable before building firmware:
+```
+export SYNC_API_KEY=your_strong_random_key_here
+```
+Or hard-code it in `config/nerves.exs`:
+```elixir
+config :nursery_hub, :sync_api_key, "your_strong_random_key_here"
+```
+
+The key must be identical on both ends. The Pi sends it as an `X-Sync-Key` HTTP header with every batch push. The central server rejects any request with a missing or wrong key with a 401 response.
+
+The health check endpoint (`GET /api/sync/health`) does not require the key — it is only used for WAN detection and contains no data.
+
+---
+
 ## What each security measure protects against
 
 | Measure | Protects against |
@@ -177,6 +208,7 @@ even if someone scans the internet they cannot find or connect to it.
 | Dashboard login | Unauthorised viewing of site data or triggering watering |
 | Phoenix secret keys | Session cookie forgery |
 | WireGuard VPN | Traffic interception, man-in-the-middle, port scanning |
+| Sync API key | Unauthorised devices pushing fake sensor readings to the central server |
 
 ---
 

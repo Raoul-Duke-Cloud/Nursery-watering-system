@@ -17,7 +17,17 @@ defmodule NurseryHubWeb.SyncController do
     json(conn, %{status: "ok"})
   end
 
-  def readings(conn, %{"readings" => readings}) when is_list(readings) do
+  def readings(conn, params) do
+    if authorized?(conn) do
+      do_readings(conn, params)
+    else
+      conn
+      |> put_status(:unauthorized)
+      |> json(%{error: "invalid or missing X-Sync-Key"})
+    end
+  end
+
+  defp do_readings(conn, %{"readings" => readings}) when is_list(readings) do
     records = Enum.flat_map(readings, &parse_reading/1)
     invalid = length(readings) - length(records)
 
@@ -38,13 +48,19 @@ defmodule NurseryHubWeb.SyncController do
     json(conn, %{accepted: accepted, duplicates: duplicates})
   end
 
-  def readings(conn, _params) do
+  defp do_readings(conn, _params) do
     conn
     |> put_status(:bad_request)
     |> json(%{error: ~s(expected {"readings": [...]})})
   end
 
   # ── Private ────────────────────────────────────────────────────────────────
+
+  defp authorized?(conn) do
+    expected = Application.get_env(:nursery_hub, :sync_api_key, "")
+    provided = conn |> get_req_header("x-sync-key") |> List.first()
+    expected != "" and provided == expected
+  end
 
   defp parse_reading(r) do
     with site_id  when is_binary(site_id) <- r["site_id"],

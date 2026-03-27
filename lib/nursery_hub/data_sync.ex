@@ -161,7 +161,9 @@ defmodule NurseryHub.DataSync do
       end))
 
     url     = String.to_charlist("#{central_url}/api/sync/readings")
-    headers = [{~c"Content-Type", ~c"application/json"}]
+    api_key = Application.get_env(:nursery_hub, :sync_api_key, "")
+    headers = [{~c"Content-Type", ~c"application/json"},
+               {~c"X-Sync-Key", String.to_charlist(api_key)}]
 
     case :httpc.request(:post, {url, headers, ~c"application/json", payload},
                         [{:timeout, 30_000}, {:ssl, [{:verify, :verify_none}]}], []) do

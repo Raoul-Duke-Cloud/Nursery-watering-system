@@ -189,6 +189,84 @@ The Pi connects to the same local WiFi network as the ESP32s. The ESP32s are rec
 
 ---
 
+## First-time setup — flashing a Nerves Pi
+
+This section covers the practical steps to build and flash the first Nerves Pi for a site. It assumes Elixir is already installed but no prior Nerves experience.
+
+### Prerequisites
+
+- Elixir 1.15+ installed
+- Nerves bootstrap archive installed (one-time, installs Nerves build tooling):
+  ```
+  mix archive.install hex nerves_bootstrap
+  ```
+- A Raspberry Pi Zero 2W with headers
+- A 16GB+ Class 10 microSD card
+- A microSD card reader on your build machine
+
+### Add Nerves dependencies to mix.exs
+
+When ready to build Pi firmware, add these three deps to `mix.exs`:
+
+```elixir
+{:nerves, "~> 1.10", runtime: false},
+{:nerves_hub_link, "~> 2.0"},                                          # OTA updates via NervesHub (Phase 4)
+{:nerves_system_rpi0_2, "~> 1.0", runtime: false, targets: :rpi0_2},  # Pi Zero 2W system image
+```
+
+Also create a `config/target.exs` that imports the Nerves config:
+
+```elixir
+# config/target.exs
+import_config "nerves.exs"
+```
+
+### Build the firmware
+
+Set the target and site environment variables, then fetch deps and build:
+
+```
+export MIX_TARGET=rpi0_2
+export SITE_ID=site_01
+export CENTRAL_URL=http://your-central-server.com
+export SYNC_API_KEY=your_shared_secret_here
+mix deps.get
+mix firmware
+```
+
+### Flash to SD card
+
+```
+mix burn
+```
+
+Nerves detects the SD card automatically and writes the firmware image. Safely eject the card after the command completes.
+
+### First boot
+
+- Insert the SD card into the Pi and power on
+- Pi boots in approximately 15 seconds
+- The app starts automatically — Mosquitto, the NurseryHub Elixir app, and the Phoenix dashboard all start on boot
+- Dashboard is accessible at `http://[pi-ip]:4000` on the local network
+- Logs are accessible via `ssh nerves.local` (default Nerves SSH)
+
+### After first flash — reconfigure ESP32s
+
+- Change `MQTT_HOST` in the ESP32 firmware from the central server IP to the Pi's local IP
+- Change `OTA_VERSION_URL` and `OTA_FIRMWARE_URL` to point to the Pi (Phase 5)
+- Re-flash all ESP32s at the site
+
+### NervesHub provisioning (Phase 4)
+
+Once NervesHub is set up, subsequent firmware updates do not require physical access to the Pi. Steps:
+
+1. Create an account at nerves-hub.org
+2. Add the `nerves_hub_link` dep to `mix.exs` (already listed above)
+3. Run `mix nerves_hub.device create` to provision the Pi with a certificate on the first flash
+4. All future updates: `mix firmware && mix nerves_hub.firmware publish && mix nerves_hub.deployment update`
+
+---
+
 ## What this does to the FMEA
 
 The two highest system-level failures (4G outage → data loss RPN 280, 4G outage → alerts lost RPN 280) both drop to ~28 and ~56 respectively. The central server single-point-of-failure (RPN 192) drops to ~72 because sites continue operating independently.

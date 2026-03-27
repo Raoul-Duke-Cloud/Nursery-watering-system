@@ -28,6 +28,9 @@ config :nursery_hub, :site_id, System.get_env("SITE_ID", "site_01")
 # Set to nil to disable DataSync (standalone Pi, no central server).
 config :nursery_hub, :central_url, System.get_env("CENTRAL_URL", "http://YOUR_CENTRAL_SERVER")
 
+# Must match :sync_api_key on the central server.
+config :nursery_hub, :sync_api_key, System.get_env("SYNC_API_KEY", "CHANGE_THIS_SYNC_API_KEY")
+
 # ── MQTT ──────────────────────────────────────────────────────────────────────
 # Local Mosquitto runs on the Pi itself. ESP32s connect to the Pi's IP.
 config :nursery_hub,

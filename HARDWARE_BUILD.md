@@ -128,6 +128,49 @@ Wire gauge guide for reference:
 
 ---
 
+## Dual moisture sensor wiring (ADS1115)
+
+The v5 firmware supports a secondary capacitive moisture sensor per zone using an ADS1115 4-channel ADC. One ADS1115 per ESP32 handles all 4 zones.
+
+### ADS1115 connections
+
+| ADS1115 pin | Connect to |
+|---|---|
+| VDD | 3.3V |
+| GND | GND |
+| SDA | GPIO21 |
+| SCL | GPIO22 |
+| ADDR | GND (sets I2C address 0x48) |
+
+The ADS1115 shares the I2C bus with the BH1750 and MLX90614 (SDA GPIO21, SCL GPIO22) — no additional wiring needed for the bus itself.
+
+### Channel assignments
+
+| ADS1115 channel | Zone |
+|---|---|
+| A0 | Zone A secondary moisture sensor |
+| A1 | Zone B secondary moisture sensor |
+| A2 | Zone C secondary moisture sensor |
+| A3 | Zone D secondary moisture sensor |
+
+Secondary sensors are wired identically to the primaries: 3.3V, GND, and signal to the ADS1115 channel.
+
+### Cross-comparison behaviour (firmware)
+
+- If primary and secondary readings agree within 10%: the firmware averages them and uses the result as the moisture reading.
+- If they diverge by more than 10%: firmware flags `moisture_diverged: true` in the MQTT payload and uses the average. The server fires a `sensor_out_of_bounds` style alert.
+- If one sensor fails completely: firmware falls back to the live sensor and flags the failure.
+
+### Enabling dual moisture
+
+The `DUAL_MOISTURE` define at the top of the firmware must be set to `true` to enable this feature. Default is `true` in v5.
+
+```cpp
+#define DUAL_MOISTURE true
+```
+
+---
+
 ## Sensor Placement
 
 ### Soil Moisture Sensors
@@ -232,3 +275,4 @@ All sensor cables run down the post to the enclosure. Tidy with UV-stable zip ti
 | UV-stable zip ties | 200mm, outdoor-rated | Cable management on post |
 | P82B96 I2C extender | — | Only if MLX/BH1750 cable run exceeds 2m |
 | PG-type cable gland backplate | Removable | Simplifies assembly and maintenance |
+| ADS1115 4-channel ADC breakout | I2C address 0x48 | One per ESP32 board; enables dual moisture sensors; ~$3–5 |

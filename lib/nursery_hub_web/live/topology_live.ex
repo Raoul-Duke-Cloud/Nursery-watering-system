@@ -2,10 +2,10 @@ defmodule NurseryHubWeb.TopologyLive do
   @moduledoc """
   Topology page — shows the full equipment hierarchy as a visual map.
 
-  Central server → sites → zones. Each element is colour-coded by status.
-  Click any zone to go to its detail page. Use this to locate the physical
-  source of a fault: find the zone on screen, read the node label, go to
-  the field and positively ID the hardware by its label.
+  Central server → sites → ESP32 nodes → zones → sensors. Each element is
+  colour-coded by status. Click any zone to go to its detail page. Use this
+  to locate the physical source of a fault: find the faulty sensor on screen,
+  read its asset tag, go to the field and positively ID the hardware by its label.
 
   Live updates via PubSub — same as the main dashboard.
   """
@@ -217,7 +217,13 @@ defmodule NurseryHubWeb.TopologyLive do
 
   defp node_block(assigns) do
     worst = worst_status(assigns.zones)
-    assigns = assign(assigns, worst: worst)
+    # Shared sensors (DHT/LUX/IR) belong to the node — pull from first zone
+    rep   = assigns.zones |> Enum.sort_by(& &1.zone_id) |> List.first()
+
+    assigns = assign(assigns,
+      worst: worst,
+      rep:   rep
+    )
 
     ~H"""
     <div class="px-3 py-2">
@@ -228,12 +234,53 @@ defmodule NurseryHubWeb.TopologyLive do
         <span class="text-xs text-gray-600">ESP32 · <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %></span>
       </div>
 
+      <%!-- Shared node sensors (DHT / LUX / IR — one set per ESP32) --%>
+      <%= if @rep && map_size(@rep.sensor_ids) > 0 do %>
+        <div class="flex flex-wrap gap-1.5 ml-4 mb-2">
+          <.sensor_pill
+            id={@rep.sensor_ids["dht"]}
+            label="DHT22"
+            reading={"#{@rep.air_temp}°C / #{@rep.humidity}%"}
+            ok={Map.get(@rep.sensor_ok, "dht", true)} />
+          <.sensor_pill
+            id={@rep.sensor_ids["lux"]}
+            label="BH1750"
+            reading={format_lux(@rep.lux)}
+            ok={Map.get(@rep.sensor_ok, "light", true)} />
+          <.sensor_pill
+            id={@rep.sensor_ids["ir"]}
+            label="MLX"
+            reading={"#{@rep.leaf_temp}°C leaf"}
+            ok={Map.get(@rep.sensor_ok, "ir", true)} />
+        </div>
+      <% end %>
+
       <%!-- Zone cards --%>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-700 rounded overflow-hidden ml-4">
         <%= for zone <- Enum.sort_by(@zones, & &1.zone_id) do %>
           <.zone_card zone={zone} />
         <% end %>
       </div>
+    </div>
+    """
+  end
+
+  # ── Sensor pill ────────────────────────────────────────────────────────────
+
+  defp sensor_pill(assigns) do
+    ~H"""
+    <div class={"flex items-center gap-1.5 px-2 py-1 rounded text-xs border " <>
+      if(@ok, do: "bg-gray-800/80 border-gray-700", else: "bg-red-950 border-red-800")}>
+      <%= if @id do %>
+        <span class="font-mono text-gray-400"><%= @id %></span>
+        <span class="text-gray-700">·</span>
+      <% end %>
+      <span class="text-gray-600"><%= @label %></span>
+      <%= if @reading do %>
+        <span class="text-gray-300"><%= @reading %></span>
+      <% end %>
+      <div class={"w-1.5 h-1.5 rounded-full flex-shrink-0 " <>
+        if(@ok, do: "bg-green-500", else: "bg-red-500 animate-pulse")}></div>
     </div>
     """
   end
@@ -260,12 +307,22 @@ defmodule NurseryHubWeb.TopologyLive do
         </div>
       </div>
 
-      <%!-- Moisture bar --%>
+      <%!-- Moisture bar + MST sensor tag --%>
       <%= if is_integer(@zone.moisture) do %>
         <div class="mb-2">
           <div class="flex items-center justify-between mb-0.5">
-            <span class="text-xs text-gray-400">moisture</span>
-            <span class="text-xs text-gray-200"><%= @zone.moisture %>%</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs text-gray-400">moisture</span>
+              <%= if mst = get_in(@zone.sensor_ids, ["moisture"]) do %>
+                <span class="font-mono text-xs text-gray-600"><%= mst %></span>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-1">
+              <%= if Map.get(@zone.sensor_ok, "moisture") == false do %>
+                <div class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+              <% end %>
+              <span class="text-xs text-gray-200"><%= @zone.moisture %>%</span>
+            </div>
           </div>
           <div class="w-full bg-gray-700 rounded-full h-1.5">
             <div class={"h-1.5 rounded-full " <> moisture_bar_class(@zone.moisture)}
@@ -351,8 +408,9 @@ defmodule NurseryHubWeb.TopologyLive do
       vpd:       r.vpd,
       watering:  false,
       mode:      r.mode || "unknown",
-      sensor_ok: %{},
-      alerts:    [:offline]
+      sensor_ok:  %{},
+      sensor_ids: %{},
+      alerts:     [:offline]
     }
   end
 

@@ -105,7 +105,13 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
 // ═══════════════════════════════════════════════════════════════════
 
 #define SITE_ID  "site_01"   // e.g. "northcote", "fitzroy"
-#define NODE_ID  "ESP-001"   // asset tag on this physical enclosure — must match the label
+#define NODE_ID  "ESP-001"   // Asset tag on this physical enclosure — must match the label
+
+// Sensor asset tags — change to match labels physically applied to each component
+#define SENSOR_ID_DHT  "DHT-001"  // DHT22 — air temp + humidity
+#define SENSOR_ID_LUX  "LUX-001"  // BH1750 — light level
+#define SENSOR_ID_IR   "IR-001"   // MLX90614 — leaf temp
+const char* SENSOR_ID_MST[NUM_ZONES] = { "MST-001", "MST-002", "MST-003", "MST-004" };
 
 // Current firmware version — increment this each time you deploy new firmware
 // The server compares this to decide whether to push an update
@@ -602,7 +608,7 @@ void logZoneToSD(int zone, int moisture, OperatingMode mode) {
 #if !TEST_MODE
 void publishZone(int zone, int moisture) {
   if (!mqtt.connected()) return;
-  StaticJsonDocument<512> doc;
+  StaticJsonDocument<768> doc;
   doc["site"]          = SITE_ID;      doc["zone"]          = ZONE_IDS[zone];
   doc["node_id"]       = NODE_ID;
   doc["ts"]            = millis()/1000; doc["moisture"]      = moisture;
@@ -618,7 +624,12 @@ void publishZone(int zone, int moisture) {
   ok["dht"]      = sharedSensors.dht_ok;
   ok["light"]    = sharedSensors.light_ok;
   ok["ir"]       = sharedSensors.ir_ok;
-  char buf[512]; serializeJson(doc, buf);
+  JsonObject sids = doc.createNestedObject("sensor_ids");
+  sids["moisture"] = SENSOR_ID_MST[zone];
+  sids["dht"]      = SENSOR_ID_DHT;
+  sids["lux"]      = SENSOR_ID_LUX;
+  sids["ir"]       = SENSOR_ID_IR;
+  char buf[768]; serializeJson(doc, buf);
   mqtt.publish(TOPIC_DATA[zone], buf);
   lastServerContact = millis();
 }

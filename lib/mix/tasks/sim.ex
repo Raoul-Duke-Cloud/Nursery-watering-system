@@ -23,6 +23,18 @@ defmodule Mix.Tasks.Sim do
     {"fitzroy",   ["zone_a", "zone_b", "zone_c", "zone_d"]}
   ]
 
+  # Simulated sensor asset tags — shared sensors (DHT/LUX/IR) are per-node; moisture (MST) is per-zone
+  @zone_sensor_ids %{
+    {"northcote", "zone_a"} => %{"moisture" => "MST-001", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"},
+    {"northcote", "zone_b"} => %{"moisture" => "MST-002", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"},
+    {"northcote", "zone_c"} => %{"moisture" => "MST-003", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"},
+    {"northcote", "zone_d"} => %{"moisture" => "MST-004", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"},
+    {"fitzroy",   "zone_a"} => %{"moisture" => "MST-005", "dht" => "DHT-002", "lux" => "LUX-002", "ir" => "IR-002"},
+    {"fitzroy",   "zone_b"} => %{"moisture" => "MST-006", "dht" => "DHT-002", "lux" => "LUX-002", "ir" => "IR-002"},
+    {"fitzroy",   "zone_c"} => %{"moisture" => "MST-007", "dht" => "DHT-002", "lux" => "LUX-002", "ir" => "IR-002"},
+    {"fitzroy",   "zone_d"} => %{"moisture" => "MST-008", "dht" => "DHT-002", "lux" => "LUX-002", "ir" => "IR-002"}
+  }
+
   # Simulated node (ESP32) asset tags — matches the physical labelling convention
   @zone_nodes %{
     {"northcote", "zone_a"} => "ESP-001",
@@ -129,7 +141,8 @@ defmodule Mix.Tasks.Sim do
       mode = if key == {"fitzroy", "zone_d"} and rem(tick, 20) < 5, do: "no_vpd", else: "normal"
 
       payload = Jason.encode!(%{
-        "node_id"   => Map.get(@zone_nodes, {site_id, zone_id}, "unknown"),
+        "node_id"    => Map.get(@zone_nodes, {site_id, zone_id}, "unknown"),
+        "sensor_ids" => Map.get(@zone_sensor_ids, {site_id, zone_id}, %{}),
         "moisture"  => round(moisture),
         "air_temp"  => Float.round(air_temp, 1),
         "humidity"  => Float.round(humidity, 1),

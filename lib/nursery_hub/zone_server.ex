@@ -44,6 +44,7 @@ defmodule NurseryHub.ZoneServer do
     :pending_check_event_id, # DB id of event waiting for post-drip moisture check
     :valve_closed_at,        # DateTime valve closed — used to match post-drip readings
     sensor_ok: %{},
+    sensor_ids: %{},         # asset tags: %{"moisture" => "MST-001", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"}
     alerts: [],              # list of active alert atoms
     faulted_sensors: [],          # sensors currently in fault — used to debounce sensor_fault alerts
     moisture_last_changed_at: nil, # DateTime when moisture last changed by >=2% — for stuck detection
@@ -114,6 +115,7 @@ defmodule NurseryHub.ZoneServer do
     new_state = %{state |
       last_seen:   now,
       node_id:     data["node_id"] || state.node_id,
+      sensor_ids:  (if is_map(data["sensor_ids"]), do: data["sensor_ids"], else: state.sensor_ids),
       moisture:    data["moisture"],
       lux:         data["lux"],
       leaf_temp:   data["leaf_temp"],

@@ -22,7 +22,8 @@ defmodule NurseryHubWeb.TopologyLive do
     {:ok, assign(socket,
       zones:        load_zones(),
       assignments:  DeviceAssignment.all_indexed(),
-      claiming:     nil,    # chip_id of node currently being registered, or nil
+      claiming:     nil,         # chip_id of node currently being registered, or nil
+      claim_hints:  %{},         # pre-filled tag suggestions for the register form
       last_refresh: DateTime.utc_now()
     )}
   end
@@ -37,7 +38,21 @@ defmodule NurseryHubWeb.TopologyLive do
 
   @impl true
   def handle_event("start_claim", %{"chip_id" => chip_id}, socket) do
-    {:noreply, assign(socket, claiming: chip_id)}
+    num_zones =
+      socket.assigns.zones
+      |> Map.values()
+      |> Enum.count(&(&1.chip_id == chip_id))
+      |> max(1)
+
+    hints = %{
+      node_tag:    DeviceAssignment.next_tag("ESP"),
+      sensor_dht:  DeviceAssignment.next_tag("DHT"),
+      sensor_lux:  DeviceAssignment.next_tag("LUX"),
+      sensor_ir:   DeviceAssignment.next_tag("IR"),
+      sensor_msts: DeviceAssignment.next_tags("MST", num_zones)
+    }
+
+    {:noreply, assign(socket, claiming: chip_id, claim_hints: hints)}
   end
 
   def handle_event("cancel_claim", _params, socket) do
@@ -176,7 +191,7 @@ defmodule NurseryHubWeb.TopologyLive do
         <%!-- Site blocks --%>
         <%= for {site_id, nodes} <- @sites do %>
           <.site_block site_id={site_id} nodes={nodes}
-            assignments={@assignments} claiming={@claiming} />
+            assignments={@assignments} claiming={@claiming} claim_hints={@claim_hints} />
         <% end %>
 
       </div>
@@ -248,7 +263,8 @@ defmodule NurseryHubWeb.TopologyLive do
           <div class="divide-y divide-gray-700">
             <%= for {node_id, zones} <- @nodes do %>
               <.node_block node_id={node_id} zones={zones}
-                assignments={@assignments} claiming={@claiming} />
+                assignments={@assignments} claiming={@claiming}
+                claim_hints={@claim_hints} />
             <% end %>
           </div>
 
@@ -299,7 +315,7 @@ defmodule NurseryHubWeb.TopologyLive do
 
       <%!-- Inline register form — shown when this node is being claimed --%>
       <%= if @show_form do %>
-        <.register_form chip_id={@chip_id} zones={@zones} />
+        <.register_form chip_id={@chip_id} zones={@zones} hints={@claim_hints} />
       <% end %>
 
       <%= if not @show_form do %>
@@ -350,7 +366,7 @@ defmodule NurseryHubWeb.TopologyLive do
       <%!-- Node tag --%>
       <div>
         <label class="text-xs text-gray-400 block mb-1">Node tag (ESP32 enclosure)</label>
-        <input type="text" name="node_tag" placeholder="ESP-003"
+        <input type="text" name="node_tag" value={@hints[:node_tag]}
           class="w-40 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
                  focus:outline-none focus:border-orange-500" />
       </div>
@@ -361,19 +377,19 @@ defmodule NurseryHubWeb.TopologyLive do
         <div class="flex flex-wrap gap-2">
           <div class="flex items-center gap-1">
             <span class="text-xs text-gray-500 w-12">DHT22</span>
-            <input type="text" name="sensor_dht" placeholder="DHT-003"
+            <input type="text" name="sensor_dht" value={@hints[:sensor_dht]}
               class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
                      focus:outline-none focus:border-orange-500" />
           </div>
           <div class="flex items-center gap-1">
             <span class="text-xs text-gray-500 w-12">BH1750</span>
-            <input type="text" name="sensor_lux" placeholder="LUX-003"
+            <input type="text" name="sensor_lux" value={@hints[:sensor_lux]}
               class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
                      focus:outline-none focus:border-orange-500" />
           </div>
           <div class="flex items-center gap-1">
             <span class="text-xs text-gray-500 w-12">MLX</span>
-            <input type="text" name="sensor_ir" placeholder="IR-003"
+            <input type="text" name="sensor_ir" value={@hints[:sensor_ir]}
               class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
                      focus:outline-none focus:border-orange-500" />
           </div>
@@ -387,7 +403,8 @@ defmodule NurseryHubWeb.TopologyLive do
           <%= for {zone, idx} <- Enum.with_index(Enum.sort_by(@zones, & &1.zone_id)) do %>
             <div class="flex items-center gap-1">
               <span class="text-xs text-gray-500 w-14 font-mono"><%= zone.zone_id %></span>
-              <input type="text" name={"sensor_mst_#{idx}"} placeholder={"MST-00#{idx + 1}"}
+              <input type="text" name={"sensor_mst_#{idx}"}
+                value={Enum.at(@hints[:sensor_msts] || [], idx)}
                 class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
                        focus:outline-none focus:border-orange-500" />
             </div>

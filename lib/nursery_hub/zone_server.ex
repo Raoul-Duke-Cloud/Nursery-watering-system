@@ -19,7 +19,7 @@ defmodule NurseryHub.ZoneServer do
   use GenServer
   require Logger
 
-  alias NurseryHub.{Alerting, AlertLog, ZoneSupervisor, SensorReading, WateringEvent}
+  alias NurseryHub.{Alerting, AlertLog, ZoneSupervisor, SensorReading, WateringEvent, DeviceAssignment}
 
   # How often to check for timeouts and stuck valves (every 60 seconds)
   @watchdog_interval_ms 60_000
@@ -29,7 +29,8 @@ defmodule NurseryHub.ZoneServer do
   defstruct [
     :site_id,
     :zone_id,
-    :node_id,                # Asset tag of the ESP32 this zone is on (e.g. "ESP-001")
+    :chip_id,                # Raw hardware ID from ESP32 MAC — immutable, set by firmware
+    :node_id,                # Resolved asset tag (e.g. "ESP-001") — assigned via Topology page
     :last_seen,              # DateTime of last received message
     :moisture,
     :lux,
@@ -62,6 +63,14 @@ defmodule NurseryHub.ZoneServer do
   def receive_data(site_id, zone_id, data) do
     case ZoneSupervisor.lookup(site_id, zone_id) do
       {:ok, pid} -> GenServer.cast(pid, {:data, data})
+      :not_found -> :ok
+    end
+  end
+
+  @doc "Re-resolve asset tags for this zone after a device assignment is saved."
+  def reassign(site_id, zone_id) do
+    case ZoneSupervisor.lookup(site_id, zone_id) do
+      {:ok, pid} -> GenServer.cast(pid, :reassign)
       :not_found -> :ok
     end
   end
@@ -112,10 +121,13 @@ defmodule NurseryHub.ZoneServer do
     {data, oob_fields} = validate_bounds(data)
     watering_now = data["watering"] == true
 
+    {resolved_node_id, resolved_sensor_ids} = resolve_identity(data, state)
+
     new_state = %{state |
       last_seen:   now,
-      node_id:     data["node_id"] || state.node_id,
-      sensor_ids:  (if is_map(data["sensor_ids"]), do: data["sensor_ids"], else: state.sensor_ids),
+      chip_id:     data["chip_id"] || state.chip_id,
+      node_id:     resolved_node_id,
+      sensor_ids:  resolved_sensor_ids,
       moisture:    data["moisture"],
       lux:         data["lux"],
       leaf_temp:   data["leaf_temp"],
@@ -169,6 +181,23 @@ defmodule NurseryHub.ZoneServer do
     )
 
     {:noreply, new_state}
+  end
+
+  # ── Re-resolve identity after a device assignment is saved in Topology ───
+
+  @impl true
+  def handle_cast(:reassign, %{chip_id: nil} = state), do: {:noreply, state}
+  def handle_cast(:reassign, state) do
+    case DeviceAssignment.get_by_chip_id(state.chip_id) do
+      nil -> {:noreply, state}
+      assignment ->
+        new_state = %{state |
+          node_id:    assignment.node_tag || state.chip_id,
+          sensor_ids: build_sensor_ids(assignment, state.zone_id)
+        }
+        Phoenix.PubSub.broadcast(NurseryHub.PubSub, "zones:updates", {:zone_update, new_state})
+        {:noreply, new_state}
+    end
   end
 
   # ── Handle state query ───────────────────────────────────────────────────
@@ -513,5 +542,43 @@ defmodule NurseryHub.ZoneServer do
 
   defp via(site_id, zone_id) do
     {:via, Registry, {NurseryHub.ZoneRegistry, {site_id, zone_id}}}
+  end
+
+  # ── Identity resolution ───────────────────────────────────────────────────
+  #
+  # Two paths:
+  #   chip_id present  — new firmware; look up assignment in DB for asset tags
+  #   chip_id absent   — old firmware or sim; node_id / sensor_ids come directly from payload
+
+  defp resolve_identity(%{"chip_id" => chip_id} = _data, state) when is_binary(chip_id) do
+    if chip_id == state.chip_id and not is_nil(state.node_id) do
+      # Same device, already resolved — use cached values (avoids DB hit every 30s)
+      {state.node_id, state.sensor_ids}
+    else
+      case DeviceAssignment.get_by_chip_id(chip_id) do
+        nil        -> {chip_id, %{}}
+        assignment -> {assignment.node_tag || chip_id, build_sensor_ids(assignment, state.zone_id)}
+      end
+    end
+  end
+
+  defp resolve_identity(data, state) do
+    # Old firmware / simulator — use payload values directly
+    node_id    = data["node_id"] || state.node_id
+    sensor_ids = (if is_map(data["sensor_ids"]), do: data["sensor_ids"], else: state.sensor_ids)
+    {node_id, sensor_ids}
+  end
+
+  # Build the sensor_ids map that the topology and alerts use, picking the correct
+  # per-zone MST tag from the node-level assignment (moisture_0..3 → zone_a..d).
+  defp build_sensor_ids(assignment, zone_id) do
+    tags      = assignment.sensor_tags || %{}
+    zone_idx  = Enum.find_index(["zone_a", "zone_b", "zone_c", "zone_d"], &(&1 == zone_id)) || 0
+    %{
+      "moisture" => tags["moisture_#{zone_idx}"],
+      "dht"      => tags["dht"],
+      "lux"      => tags["lux"],
+      "ir"       => tags["ir"]
+    }
   end
 end

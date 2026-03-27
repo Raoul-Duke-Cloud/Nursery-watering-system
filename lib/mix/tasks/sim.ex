@@ -23,6 +23,13 @@ defmodule Mix.Tasks.Sim do
     {"fitzroy",   ["zone_a", "zone_b", "zone_c", "zone_d"]}
   ]
 
+  # Simulated chip IDs — stand-ins for the MAC-derived hardware IDs that real ESP32s publish
+  # Register these through the Topology page on first run to assign asset tags
+  @sim_chip_ids %{
+    "northcote" => "AABBCC001122",
+    "fitzroy"   => "AABBCC003344"
+  }
+
   # Simulated sensor asset tags — shared sensors (DHT/LUX/IR) are per-node; moisture (MST) is per-zone
   @zone_sensor_ids %{
     {"northcote", "zone_a"} => %{"moisture" => "MST-001", "dht" => "DHT-001", "lux" => "LUX-001", "ir" => "IR-001"},
@@ -141,6 +148,7 @@ defmodule Mix.Tasks.Sim do
       mode = if key == {"fitzroy", "zone_d"} and rem(tick, 20) < 5, do: "no_vpd", else: "normal"
 
       payload = Jason.encode!(%{
+        "chip_id"    => Map.get(@sim_chip_ids, site_id, "SIMUNKNOWN"),
         "node_id"    => Map.get(@zone_nodes, {site_id, zone_id}, "unknown"),
         "sensor_ids" => Map.get(@zone_sensor_ids, {site_id, zone_id}, %{}),
         "moisture"  => round(moisture),

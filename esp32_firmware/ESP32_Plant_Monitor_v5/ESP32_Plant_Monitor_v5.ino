@@ -120,13 +120,8 @@ const int RELAY_PINS[NUM_ZONES] = { 25, 26, 13, 14 };
 // ═══════════════════════════════════════════════════════════════════
 
 #define SITE_ID  "site_01"    // e.g. "northcote", "fitzroy"
-#define NODE_ID  "ESP-001"    // Asset tag on the physical enclosure — change per device
-
-// Sensor asset tags — change to match labels physically applied to each component
-#define SENSOR_ID_DHT  "DHT-001"  // DHT22 — air temp + humidity
-#define SENSOR_ID_LUX  "LUX-001"  // BH1750 — light level
-#define SENSOR_ID_IR   "IR-001"   // MLX90614 — leaf temp
-const char* SENSOR_ID_MST[NUM_ZONES] = { "MST-001", "MST-002", "MST-003", "MST-004" };
+// Asset tags (ESP-NNN, MST-NNN, etc.) are assigned through the Topology page on first power-on.
+// The server identifies this device by its chip_id (derived from MAC below) — no manual tag config needed.
 
 // Current firmware version — increment this each time you deploy new firmware
 // The server compares this to decide whether to push an update
@@ -759,9 +754,18 @@ void logZoneToSD(int zone, int moisture, OperatingMode mode) {
 #if !TEST_MODE
 void publishZone(int zone, int moisture) {
   if (!mqtt.connected()) return;
-  StaticJsonDocument<768> doc;
+  // Build chip_id once from MAC (format: "A4CF12345678")
+  static char chipId[13] = {0};
+  if (chipId[0] == 0) {
+    uint64_t mac = ESP.getEfuseMac();
+    snprintf(chipId, sizeof(chipId), "%02X%02X%02X%02X%02X%02X",
+      (uint8_t)(mac >> 40), (uint8_t)(mac >> 32), (uint8_t)(mac >> 24),
+      (uint8_t)(mac >> 16), (uint8_t)(mac >> 8),  (uint8_t)(mac));
+  }
+  StaticJsonDocument<512> doc;
   doc["site"]          = SITE_ID;      doc["zone"]          = ZONE_IDS[zone];
-  doc["node_id"]       = NODE_ID;
+  doc["chip_id"]       = chipId;
+  doc["zone_index"]    = zone;
   doc["ts"]            = millis()/1000; doc["moisture"]      = moisture;
   doc["lux"]           = sharedLux;    doc["leaf_temp"]      = sharedLeafTemp;
   doc["air_temp"]      = sharedAirTemp; doc["humidity"]      = sharedHumidity;
@@ -777,12 +781,7 @@ void publishZone(int zone, int moisture) {
   ok["dht_diverged"]      = sharedSensors.dht_diverged;
   ok["light"]             = sharedSensors.light_ok;
   ok["ir"]                = sharedSensors.ir_ok;
-  JsonObject sids = doc.createNestedObject("sensor_ids");
-  sids["moisture"] = SENSOR_ID_MST[zone];
-  sids["dht"]      = SENSOR_ID_DHT;
-  sids["lux"]      = SENSOR_ID_LUX;
-  sids["ir"]       = SENSOR_ID_IR;
-  char buf[768]; serializeJson(doc, buf);
+  char buf[512]; serializeJson(doc, buf);
   mqtt.publish(TOPIC_DATA[zone], buf);
   lastServerContact = millis();
 }

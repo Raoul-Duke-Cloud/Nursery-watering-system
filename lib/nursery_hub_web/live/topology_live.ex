@@ -11,7 +11,7 @@ defmodule NurseryHubWeb.TopologyLive do
   """
 
   use Phoenix.LiveView
-  alias NurseryHub.{ZoneSupervisor, ZoneServer, SensorReading, DataSync}
+  alias NurseryHub.{ZoneSupervisor, ZoneServer, SensorReading, DataSync, DeviceAssignment}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,6 +21,8 @@ defmodule NurseryHubWeb.TopologyLive do
 
     {:ok, assign(socket,
       zones:        load_zones(),
+      assignments:  DeviceAssignment.all_indexed(),
+      claiming:     nil,    # chip_id of node currently being registered, or nil
       last_refresh: DateTime.utc_now()
     )}
   end
@@ -29,6 +31,45 @@ defmodule NurseryHubWeb.TopologyLive do
   def handle_info({:zone_update, updated_zone}, socket) do
     zones = Map.put(socket.assigns.zones, zone_key(updated_zone), updated_zone)
     {:noreply, assign(socket, zones: zones, last_refresh: DateTime.utc_now())}
+  end
+
+  # ── Register form events ──────────────────────────────────────────────────
+
+  @impl true
+  def handle_event("start_claim", %{"chip_id" => chip_id}, socket) do
+    {:noreply, assign(socket, claiming: chip_id)}
+  end
+
+  def handle_event("cancel_claim", _params, socket) do
+    {:noreply, assign(socket, claiming: nil)}
+  end
+
+  def handle_event("save_claim", %{"chip_id" => chip_id} = params, socket) do
+    sensor_tags = %{
+      "dht"        => params["sensor_dht"],
+      "lux"        => params["sensor_lux"],
+      "ir"         => params["sensor_ir"],
+      "moisture_0" => params["sensor_mst_0"],
+      "moisture_1" => params["sensor_mst_1"],
+      "moisture_2" => params["sensor_mst_2"],
+      "moisture_3" => params["sensor_mst_3"]
+    }
+    |> Map.reject(fn {_, v} -> is_nil(v) or v == "" end)
+
+    {:ok, _} = DeviceAssignment.upsert(chip_id, %{
+      node_tag:    params["node_tag"],
+      sensor_tags: sensor_tags
+    })
+
+    # Tell every zone on this chip to re-resolve its tags from the assignment
+    for {_, zone} <- socket.assigns.zones, zone.chip_id == chip_id do
+      ZoneServer.reassign(zone.site_id, zone.zone_id)
+    end
+
+    {:noreply, assign(socket,
+      claiming:    nil,
+      assignments: DeviceAssignment.all_indexed()
+    )}
   end
 
   # ── Rendering ──────────────────────────────────────────────────────────────
@@ -65,6 +106,7 @@ defmodule NurseryHubWeb.TopologyLive do
       n_alert: n_alert,
       n_off:   n_off,
       wan_up:  wan_up
+      # assignments and claiming already in assigns from mount/events
     )
 
     ~H"""
@@ -133,7 +175,8 @@ defmodule NurseryHubWeb.TopologyLive do
 
         <%!-- Site blocks --%>
         <%= for {site_id, nodes} <- @sites do %>
-          <.site_block site_id={site_id} nodes={nodes} />
+          <.site_block site_id={site_id} nodes={nodes}
+            assignments={@assignments} claiming={@claiming} />
         <% end %>
 
       </div>
@@ -168,6 +211,7 @@ defmodule NurseryHubWeb.TopologyLive do
       n_water:   n_water,
       worst:     worst,
       all_zones: all_zones
+      # assignments + claiming flow through from parent
     )
 
     ~H"""
@@ -203,7 +247,8 @@ defmodule NurseryHubWeb.TopologyLive do
           <%!-- Node blocks --%>
           <div class="divide-y divide-gray-700">
             <%= for {node_id, zones} <- @nodes do %>
-              <.node_block node_id={node_id} zones={zones} />
+              <.node_block node_id={node_id} zones={zones}
+                assignments={@assignments} claiming={@claiming} />
             <% end %>
           </div>
 
@@ -216,52 +261,152 @@ defmodule NurseryHubWeb.TopologyLive do
   # ── Node block ─────────────────────────────────────────────────────────────
 
   defp node_block(assigns) do
-    worst = worst_status(assigns.zones)
-    # Shared sensors (DHT/LUX/IR) belong to the node — pull from first zone
-    rep   = assigns.zones |> Enum.sort_by(& &1.zone_id) |> List.first()
+    worst    = worst_status(assigns.zones)
+    rep      = assigns.zones |> Enum.sort_by(& &1.zone_id) |> List.first()
+    chip_id  = rep && rep.chip_id
+    # Unregistered = device is sending chip_id but no assignment saved yet
+    registered = is_nil(chip_id) or Map.has_key?(assigns.assignments, chip_id)
 
     assigns = assign(assigns,
-      worst: worst,
-      rep:   rep
+      worst:       worst,
+      rep:         rep,
+      chip_id:     chip_id,
+      registered:  registered,
+      show_form:   chip_id != nil and assigns.claiming == chip_id
     )
 
     ~H"""
     <div class="px-3 py-2">
+
       <%!-- Node header --%>
       <div class="flex items-center gap-2 mb-2">
         <div class={"w-2 h-2 rounded-full flex-shrink-0 " <> site_dot_class(@worst)}></div>
-        <span class="font-mono text-xs font-semibold text-gray-300"><%= @node_id %></span>
-        <span class="text-xs text-gray-600">ESP32 · <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %></span>
+        <%= if @registered do %>
+          <span class="font-mono text-xs font-semibold text-gray-300"><%= @node_id %></span>
+          <span class="text-xs text-gray-600">ESP32 · <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %></span>
+        <% else %>
+          <span class="font-mono text-xs font-semibold text-orange-400">Unregistered</span>
+          <span class="font-mono text-xs text-gray-600"><%= @chip_id %></span>
+          <span class="text-xs text-gray-600">· <%= length(@zones) %> zone<%= if length(@zones) != 1, do: "s" %></span>
+          <%= if not @show_form do %>
+            <button phx-click="start_claim" phx-value-chip_id={@chip_id}
+              class="ml-auto text-xs bg-orange-800 hover:bg-orange-700 text-orange-200 px-2 py-0.5 rounded">
+              Register →
+            </button>
+          <% end %>
+        <% end %>
       </div>
 
-      <%!-- Shared node sensors (DHT / LUX / IR — one set per ESP32) --%>
-      <%= if @rep && map_size(@rep.sensor_ids) > 0 do %>
-        <div class="flex flex-wrap gap-1.5 ml-4 mb-2">
-          <.sensor_pill
-            id={@rep.sensor_ids["dht"]}
-            label="DHT22"
-            reading={"#{@rep.air_temp}°C / #{@rep.humidity}%"}
-            ok={Map.get(@rep.sensor_ok, "dht", true)} />
-          <.sensor_pill
-            id={@rep.sensor_ids["lux"]}
-            label="BH1750"
-            reading={format_lux(@rep.lux)}
-            ok={Map.get(@rep.sensor_ok, "light", true)} />
-          <.sensor_pill
-            id={@rep.sensor_ids["ir"]}
-            label="MLX"
-            reading={"#{@rep.leaf_temp}°C leaf"}
-            ok={Map.get(@rep.sensor_ok, "ir", true)} />
+      <%!-- Inline register form — shown when this node is being claimed --%>
+      <%= if @show_form do %>
+        <.register_form chip_id={@chip_id} zones={@zones} />
+      <% end %>
+
+      <%= if not @show_form do %>
+        <%!-- Shared node sensors (DHT / LUX / IR) --%>
+        <%= if @rep && map_size(@rep.sensor_ids) > 0 do %>
+          <div class="flex flex-wrap gap-1.5 ml-4 mb-2">
+            <.sensor_pill
+              id={@rep.sensor_ids["dht"]}
+              label="DHT22"
+              reading={"#{@rep.air_temp}°C / #{@rep.humidity}%"}
+              ok={Map.get(@rep.sensor_ok, "dht", true)} />
+            <.sensor_pill
+              id={@rep.sensor_ids["lux"]}
+              label="BH1750"
+              reading={format_lux(@rep.lux)}
+              ok={Map.get(@rep.sensor_ok, "light", true)} />
+            <.sensor_pill
+              id={@rep.sensor_ids["ir"]}
+              label="MLX"
+              reading={"#{@rep.leaf_temp}°C leaf"}
+              ok={Map.get(@rep.sensor_ok, "ir", true)} />
+          </div>
+        <% end %>
+
+        <%!-- Zone cards --%>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-700 rounded overflow-hidden ml-4">
+          <%= for zone <- Enum.sort_by(@zones, & &1.zone_id) do %>
+            <.zone_card zone={zone} />
+          <% end %>
         </div>
       <% end %>
 
-      <%!-- Zone cards --%>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-px bg-gray-700 rounded overflow-hidden ml-4">
-        <%= for zone <- Enum.sort_by(@zones, & &1.zone_id) do %>
-          <.zone_card zone={zone} />
-        <% end %>
-      </div>
     </div>
+    """
+  end
+
+  # ── Register form ──────────────────────────────────────────────────────────
+
+  defp register_form(assigns) do
+    ~H"""
+    <form phx-submit="save_claim" class="ml-4 mb-3 bg-gray-900 border border-orange-800 rounded-lg p-4 space-y-3">
+      <input type="hidden" name="chip_id" value={@chip_id} />
+
+      <div class="text-xs text-orange-300 font-semibold mb-2">
+        Register device <span class="font-mono text-gray-400"><%= @chip_id %></span>
+      </div>
+
+      <%!-- Node tag --%>
+      <div>
+        <label class="text-xs text-gray-400 block mb-1">Node tag (ESP32 enclosure)</label>
+        <input type="text" name="node_tag" placeholder="ESP-003"
+          class="w-40 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
+                 focus:outline-none focus:border-orange-500" />
+      </div>
+
+      <%!-- Shared sensor tags --%>
+      <div>
+        <label class="text-xs text-gray-400 block mb-1">Shared sensors (one set per ESP32)</label>
+        <div class="flex flex-wrap gap-2">
+          <div class="flex items-center gap-1">
+            <span class="text-xs text-gray-500 w-12">DHT22</span>
+            <input type="text" name="sensor_dht" placeholder="DHT-003"
+              class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
+                     focus:outline-none focus:border-orange-500" />
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="text-xs text-gray-500 w-12">BH1750</span>
+            <input type="text" name="sensor_lux" placeholder="LUX-003"
+              class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
+                     focus:outline-none focus:border-orange-500" />
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="text-xs text-gray-500 w-12">MLX</span>
+            <input type="text" name="sensor_ir" placeholder="IR-003"
+              class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
+                     focus:outline-none focus:border-orange-500" />
+          </div>
+        </div>
+      </div>
+
+      <%!-- Per-zone moisture sensors --%>
+      <div>
+        <label class="text-xs text-gray-400 block mb-1">Moisture probes (per zone slot)</label>
+        <div class="flex flex-wrap gap-2">
+          <%= for {zone, idx} <- Enum.with_index(Enum.sort_by(@zones, & &1.zone_id)) do %>
+            <div class="flex items-center gap-1">
+              <span class="text-xs text-gray-500 w-14 font-mono"><%= zone.zone_id %></span>
+              <input type="text" name={"sensor_mst_#{idx}"} placeholder={"MST-00#{idx + 1}"}
+                class="w-24 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-white font-mono
+                       focus:outline-none focus:border-orange-500" />
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%!-- Actions --%>
+      <div class="flex gap-2 pt-1">
+        <button type="submit"
+          class="text-xs bg-orange-700 hover:bg-orange-600 text-white px-3 py-1.5 rounded">
+          Save
+        </button>
+        <button type="button" phx-click="cancel_claim"
+          class="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1.5 rounded">
+          Cancel
+        </button>
+      </div>
+    </form>
     """
   end
 
@@ -398,6 +543,7 @@ defmodule NurseryHubWeb.TopologyLive do
     %ZoneServer{
       site_id:   r.site_id,
       zone_id:   r.zone_id,
+      chip_id:   nil,
       node_id:   r.node_id,
       last_seen: r.inserted_at,
       moisture:  r.moisture,

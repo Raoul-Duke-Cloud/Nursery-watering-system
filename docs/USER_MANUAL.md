@@ -44,8 +44,8 @@ The Topology page (`/topology`, or click **Topology** in the header) is a live m
 
 1. Open the Topology page — find the red, yellow, or orange card
 2. Note the site name and zone ID shown on the card
-3. Go to the physical site — find the enclosure labelled with that node number
-4. Find the sensor or valve labelled with that zone ID
+3. Go to the physical site — find the enclosure with the `ESP-XXX` ID shown in the software
+4. Find the sensor or valve with the `VLV-XXX` / `MST-XXX` ID shown in the software
 5. That is the hardware behind what you saw on screen
 
 The topology view is the authoritative record of all equipment known to the system. Once a zone connects for the first time it appears here and stays until explicitly removed.
@@ -262,7 +262,7 @@ Print this section and keep it at the site.
 │  FAULT IN THE FIELD?                                            │
 │  1. Open Topology page → find the coloured card                 │
 │  2. Read the site and zone ID on the card                       │
-│  3. Find the enclosure with that node label                     │
+│  3. Find the enclosure (ESP-XXX) shown in the software           │
 │  4. Find the sensor/valve with that zone label                  │
 │                                                                 │
 │  STATUS COLOURS                                                 │

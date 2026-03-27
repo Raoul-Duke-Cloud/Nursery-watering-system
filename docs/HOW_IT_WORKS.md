@@ -58,7 +58,7 @@ When the internet comes back, the Pi automatically sends everything it recorded 
 
 There are two main views in the dashboard:
 
-**Topology view** (`/topology`) — shows the full equipment map: your central server at the top, each site below it, and every zone as a card within its site. Each card is colour-coded by status — green for normal, blue for watering, yellow for alert, red for offline. This is the first place to look when something goes wrong: find the fault on screen, read which node and zone it is, go to the field and find the hardware with the matching label.
+**Topology view** (`/topology`) — shows the full equipment map: your central server at the top, each site below it, and every zone as a card within its site. Each card is colour-coded by status — green for normal, blue for watering, yellow for alert, red for offline. This is the first place to look when something goes wrong: find the fault on screen, read the component ID from the software, go to the field and find the hardware carrying that ID on its label.
 
 **Table view** (`/`) — the detailed list of all zones with sensor readings, filters, and action buttons. Use this when you want to compare readings across zones or filter by site, status, or sensor ranges.
 

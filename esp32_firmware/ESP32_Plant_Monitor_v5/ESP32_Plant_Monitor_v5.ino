@@ -1,6 +1,6 @@
 /*
  * ESP32 Plant Monitoring — Multi-Zone Drip/Feed System
- * Version 5.1
+ * Version 5.2
  *
  * One ESP32 controls multiple independent zones.
  * Each zone has its own moisture sensor and solenoid valve.
@@ -45,6 +45,10 @@
  * ── v4.2 CHANGES ───────────────────────────────────────────────────────────
  * - OTA (over-the-air) firmware updates via HTTP on boot (mesh mode only)
  * - Rollback support: if new firmware fails to start, ESP32 boots previous
+ *
+ * ── v5.2 CHANGES ───────────────────────────────────────────────────────────
+ * - Guard MLX90614 reads behind mlxFound flag — prevents I2C watchdog crash
+ *   when sensor is not connected
  *
  * ── v5.1 CHANGES ───────────────────────────────────────────────────────────
  * - Guard all ADS1115 reads behind adsFound flag — prevents crash/reboot loop
@@ -236,7 +240,9 @@ DHT               dht2(DHT_PIN_2, DHT22);
 BH1750            lightMeter;
 Adafruit_MLX90614 mlx;
 Adafruit_ADS1115  ads;
-bool              adsFound = false;
+bool              adsFound   = false;
+bool              luxFound   = false;
+bool              mlxFound   = false;
 
 #if !TEST_MODE
 WiFiClient   wifiClient;
@@ -370,8 +376,8 @@ int readMoistureDual(int zone) {
 }
 
 void readSharedSensors() {
-  sharedLux      = lightMeter.readLightLevel();
-  sharedLeafTemp = mlx.readObjectTempC();
+  sharedLux      = luxFound ? lightMeter.readLightLevel() : -1;
+  sharedLeafTemp = mlxFound ? mlx.readObjectTempC() : NAN;
   sharedSensors.light_ok = (sharedLux >= 0);
   sharedSensors.ir_ok    = (sharedLeafTemp > -20 && sharedLeafTemp < 80);
 
@@ -452,18 +458,26 @@ void runBootSelfTest() {
     Serial.printf( "│    DHT22 (secondary) OK   — %.1f°C  %.1f%%RH\n", t2, h2);
 
   // BH1750
-  float lux = lightMeter.readLightLevel();
-  if (lux < 0)
-    Serial.println("│    BH1750            FAIL — no reading (check I2C GPIO21/22)");
-  else
-    Serial.printf( "│    BH1750            OK   — %.0f lux\n", lux);
+  if (!luxFound)
+    Serial.println("│    BH1750            SKIP — not found on I2C");
+  else {
+    float lux = lightMeter.readLightLevel();
+    if (lux < 0)
+      Serial.println("│    BH1750            FAIL — no reading (check I2C GPIO21/22)");
+    else
+      Serial.printf( "│    BH1750            OK   — %.0f lux\n", lux);
+  }
 
   // MLX90614
-  float leafT = mlx.readObjectTempC();
-  if (leafT < -20 || leafT > 80)
-    Serial.println("│    MLX90614          FAIL — reading out of range (check I2C GPIO21/22)");
-  else
-    Serial.printf( "│    MLX90614          OK   — %.1f°C object temp\n", leafT);
+  if (!mlxFound)
+    Serial.println("│    MLX90614          SKIP — not found on I2C");
+  else {
+    float leafT = mlx.readObjectTempC();
+    if (leafT < -20 || leafT > 80)
+      Serial.println("│    MLX90614          FAIL — reading out of range (check I2C GPIO21/22)");
+    else
+      Serial.printf( "│    MLX90614          OK   — %.1f°C object temp\n", leafT);
+  }
 
   // ── Per-zone moisture sensors ────────────────────────────────────
   Serial.println("│");
@@ -931,9 +945,9 @@ void setup() {
 
   Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 #if TEST_MODE
-  Serial.println("ESP32 Plant Monitor v5.1 — TEST MODE");
+  Serial.println("ESP32 Plant Monitor v5.2 — TEST MODE");
 #else
-  Serial.println("ESP32 Plant Monitor v5.1 — Mesh Mode");
+  Serial.println("ESP32 Plant Monitor v5.2 — Mesh Mode");
 #endif
   Serial.printf("Site: %s   Zones: %d\n", SITE_ID, NUM_ZONES);
   for (int z = 0; z < NUM_ZONES; z++)
@@ -961,8 +975,9 @@ void setup() {
   Wire.begin(I2C_SDA, I2C_SCL);
   adsFound = ads.begin(ADS1115_ADDR);
   if (adsFound) ads.setGain(GAIN_ONE);
-  lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);
-  mlx.begin(); dht.begin(); dht2.begin();
+  luxFound = lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);
+  mlxFound = mlx.begin();
+  dht.begin(); dht2.begin();
   analogReadResolution(12); analogSetAttenuation(ADC_11db);
   initSD();
 

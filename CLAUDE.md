@@ -170,7 +170,18 @@ Tables:
 
 ---
 
-## ESP32 firmware (`esp32_firmware/ESP32_Plant_Monitor_v5/`)
+## ESP32 firmware
+
+### Sketches
+
+| Sketch | Folder | Purpose |
+|---|---|---|
+| `ESP32_Plant_Monitor_v5.ino` | `esp32_firmware/ESP32_Plant_Monitor_v5/` | Main firmware — sensor reads, MQTT, auto-watering, OTA |
+| `Moisture_Calibration.ino` | `esp32_firmware/Moisture_Calibration/` | Interactive dry/wet calibration — outputs `MOISTURE_DRY` / `MOISTURE_WET` values to paste into main sketch |
+| `Cable_Tester.ino` | `esp32_firmware/Cable_Tester/` | EOL loopback tester — continuity + reverse-direction diode protection test per cable type |
+| `Sensor_Test.ino` | `esp32_firmware/Sensor_Test/` | Reads all sensors independently, no watering logic — for hardware verification |
+
+### Main firmware (`esp32_firmware/ESP32_Plant_Monitor_v5/`)
 
 Key config at top of file — only `SITE_ID` and hardware pin assignments need changing per device. **No NODE_ID or sensor tag defines** — asset tags are assigned server-side through the Topology page.
 

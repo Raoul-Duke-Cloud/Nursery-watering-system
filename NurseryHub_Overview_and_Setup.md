@@ -296,7 +296,23 @@ the solenoid, and the valve opens. When LOW, valve closes.
 
 ## Installation — step by step
 
+### ESP32 sketches
+
+| Sketch | Folder | When to use |
+|---|---|---|
+| `ESP32_Plant_Monitor_v5.ino` | `esp32_firmware/ESP32_Plant_Monitor_v5/` | Main firmware for all deployed nodes |
+| `Moisture_Calibration.ino` | `esp32_firmware/Moisture_Calibration/` | Run once per sensor batch to get `MOISTURE_DRY` / `MOISTURE_WET` values |
+| `Cable_Tester.ino` | `esp32_firmware/Cable_Tester/` | Test every cable with EOL loopback plugs before connecting sensors |
+| `Sensor_Test.ino` | `esp32_firmware/Sensor_Test/` | Verify hardware is wired correctly — reads all sensors, no watering logic |
+
+---
+
 ### STEP 1 — Install Arduino IDE and upload to ESP32
+
+**Prerequisites — install these first (Windows):**
+- **CH340 driver** — most ESP32 boards use this USB-to-serial chip. Download from **wch.cn** (search "CH340 driver Windows"). Without it, the board won't appear as a COM port.
+- **CP2102 driver** (if your board has a Silicon Labs chip instead) — download from **silabs.com** (search "CP210x Universal Windows Driver").
+- Install the driver, reboot, then plug in the ESP32 — you should hear the USB connect sound and see a COM port appear in Device Manager under Ports (COM & LPT).
 
 1. Download Arduino IDE from **arduino.cc**
 2. Open Arduino IDE → Preferences → Additional Board URLs, add:

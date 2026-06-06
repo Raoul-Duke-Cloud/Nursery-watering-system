@@ -1,6 +1,6 @@
 /*
  * ESP32 Plant Monitoring — Multi-Zone Drip/Feed System
- * Version 5.0
+ * Version 5.1
  *
  * One ESP32 controls multiple independent zones.
  * Each zone has its own moisture sensor and solenoid valve.
@@ -45,6 +45,10 @@
  * ── v4.2 CHANGES ───────────────────────────────────────────────────────────
  * - OTA (over-the-air) firmware updates via HTTP on boot (mesh mode only)
  * - Rollback support: if new firmware fails to start, ESP32 boots previous
+ *
+ * ── v5.1 CHANGES ───────────────────────────────────────────────────────────
+ * - Guard all ADS1115 reads behind adsFound flag — prevents crash/reboot loop
+ *   when ADS1115 is not physically connected
  *
  * ── v5.0 CHANGES ───────────────────────────────────────────────────────────
  * - Dual moisture sensors: secondary sensors on ADS1115 I2C ADC (addr 0x48)
@@ -232,6 +236,7 @@ DHT               dht2(DHT_PIN_2, DHT22);
 BH1750            lightMeter;
 Adafruit_MLX90614 mlx;
 Adafruit_ADS1115  ads;
+bool              adsFound = false;
 
 #if !TEST_MODE
 WiFiClient   wifiClient;
@@ -318,14 +323,16 @@ int readMoistureDual(int zone) {
   int pctA    = constrain(map(rawA, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
 
   // ── Secondary sensor (ADS1115) ────────────────────────────────
-  // ADS1115 with GAIN_ONE (±4.096V): 0–32767 counts for 0–4.096V
-  // At 3.3V sensor output max count ≈ 26367
-  // Normalise to 0–4095 to match analogRead scale, then map to percent
-  int16_t rawB_ads = ads.readADC_SingleEnded(zone);
-  int rawB_norm    = (int)map((long)rawB_ads, 0, 26367, 0, 4095);
-  rawB_norm        = constrain(rawB_norm, 0, 4095);
-  bool okB         = (rawB_norm >= 100 && rawB_norm <= 4000);
-  int pctB         = constrain(map(rawB_norm, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
+  int rawB_norm = 0;
+  bool okB      = false;
+  int pctB      = 0;
+  if (adsFound) {
+    int16_t rawB_ads = ads.readADC_SingleEnded(zone);
+    rawB_norm        = (int)map((long)rawB_ads, 0, 26367, 0, 4095);
+    rawB_norm        = constrain(rawB_norm, 0, 4095);
+    okB              = (rawB_norm >= 100 && rawB_norm <= 4000);
+    pctB             = constrain(map(rawB_norm, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
+  }
 
   // ── Cross-comparison ──────────────────────────────────────────
   if (okA && okB) {
@@ -474,16 +481,20 @@ void runBootSelfTest() {
 
 #if DUAL_MOISTURE
     // Secondary (ADS1115)
-    int16_t rawS_ads  = ads.readADC_SingleEnded(z);
-    int rawS_norm     = (int)map((long)rawS_ads, 0, 26367, 0, 4095);
-    rawS_norm         = constrain(rawS_norm, 0, 4095);
-    int pctS          = constrain(map(rawS_norm, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
-    if (rawS_norm < 100 || rawS_norm > 4000)
-      Serial.printf("│    [%s] secondary  FAIL — norm ADC %d (check ADS1115 ch%d)\n",
-        ZONE_IDS[z], rawS_norm, z);
-    else
-      Serial.printf("│    [%s] secondary  OK   — %d%% moisture (norm %d)\n",
-        ZONE_IDS[z], pctS, rawS_norm);
+    if (!adsFound) {
+      Serial.printf("│    [%s] secondary  SKIP — ADS1115 not found\n", ZONE_IDS[z]);
+    } else {
+      int16_t rawS_ads  = ads.readADC_SingleEnded(z);
+      int rawS_norm     = (int)map((long)rawS_ads, 0, 26367, 0, 4095);
+      rawS_norm         = constrain(rawS_norm, 0, 4095);
+      int pctS          = constrain(map(rawS_norm, MOISTURE_DRY, MOISTURE_WET, 0, 100), 0, 100);
+      if (rawS_norm < 100 || rawS_norm > 4000)
+        Serial.printf("│    [%s] secondary  FAIL — norm ADC %d (check ADS1115 ch%d)\n",
+          ZONE_IDS[z], rawS_norm, z);
+      else
+        Serial.printf("│    [%s] secondary  OK   — %d%% moisture (norm %d)\n",
+          ZONE_IDS[z], pctS, rawS_norm);
+    }
 #endif
   }
 
@@ -920,9 +931,9 @@ void setup() {
 
   Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 #if TEST_MODE
-  Serial.println("ESP32 Plant Monitor v5.0 — TEST MODE");
+  Serial.println("ESP32 Plant Monitor v5.1 — TEST MODE");
 #else
-  Serial.println("ESP32 Plant Monitor v5.0 — Mesh Mode");
+  Serial.println("ESP32 Plant Monitor v5.1 — Mesh Mode");
 #endif
   Serial.printf("Site: %s   Zones: %d\n", SITE_ID, NUM_ZONES);
   for (int z = 0; z < NUM_ZONES; z++)
@@ -948,8 +959,8 @@ void setup() {
   }
 
   Wire.begin(I2C_SDA, I2C_SCL);
-  ads.begin(ADS1115_ADDR);
-  ads.setGain(GAIN_ONE);
+  adsFound = ads.begin(ADS1115_ADDR);
+  if (adsFound) ads.setGain(GAIN_ONE);
   lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);
   mlx.begin(); dht.begin(); dht2.begin();
   analogReadResolution(12); analogSetAttenuation(ADC_11db);

@@ -1,6 +1,6 @@
 /*
  * ESP32 Plant Monitoring — Multi-Zone Drip/Feed System
- * Version 5.2
+ * Version 5.3
  *
  * One ESP32 controls multiple independent zones.
  * Each zone has its own moisture sensor and solenoid valve.
@@ -45,6 +45,10 @@
  * ── v4.2 CHANGES ───────────────────────────────────────────────────────────
  * - OTA (over-the-air) firmware updates via HTTP on boot (mesh mode only)
  * - Rollback support: if new firmware fails to start, ESP32 boots previous
+ *
+ * ── v5.3 CHANGES ───────────────────────────────────────────────────────────
+ * - Add Wire.setTimeOut(500ms) — prevents I2C watchdog crash when a sensor
+ *   is partially detected but hangs on reads
  *
  * ── v5.2 CHANGES ───────────────────────────────────────────────────────────
  * - Guard MLX90614 reads behind mlxFound flag — prevents I2C watchdog crash
@@ -945,9 +949,9 @@ void setup() {
 
   Serial.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 #if TEST_MODE
-  Serial.println("ESP32 Plant Monitor v5.2 — TEST MODE");
+  Serial.println("ESP32 Plant Monitor v5.3 — TEST MODE");
 #else
-  Serial.println("ESP32 Plant Monitor v5.2 — Mesh Mode");
+  Serial.println("ESP32 Plant Monitor v5.3 — Mesh Mode");
 #endif
   Serial.printf("Site: %s   Zones: %d\n", SITE_ID, NUM_ZONES);
   for (int z = 0; z < NUM_ZONES; z++)
@@ -973,6 +977,7 @@ void setup() {
   }
 
   Wire.begin(I2C_SDA, I2C_SCL);
+  Wire.setTimeOut(500);
   adsFound = ads.begin(ADS1115_ADDR);
   if (adsFound) ads.setGain(GAIN_ONE);
   luxFound = lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);

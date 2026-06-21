@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NodeBoard v2 Wiring Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d1117; color: #c9d1d9; font-family: Consolas, monospace; padding: 20px; }
+h1 { color: #58a6ff; font-size: 22px; margin-bottom: 4px; }
+.subtitle { color: #8b949e; font-size: 11px; margin-bottom: 20px; }
+.section { margin-bottom: 24px; }
+.sec-title { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+              padding: 8px 16px; margin-bottom: 8px; }
+.sec-title h2 { color: #58a6ff; font-size: 14px; display: inline; }
+.sec-title span { color: #8b949e; font-size: 10px; margin-left: 12px; }
+svg { border-radius: 6px; overflow: visible; }
+.note { background: #1a1a10; border: 1px solid #d29922; border-radius: 4px;
+         padding: 8px 14px; margin: 8px 0; font-size: 11px; color: #d29922; }
+@media print {
+  body { background: white; }
+  .note { border-color: #999; color: #333; }
+}
+</style>
+</head>
+<body>
+<h1>NurseryHub NodeBoard v2 — Wiring Diagram</h1>
+<div class="subtitle">Generated from generate_schematic.py · All connections match NETLIST source of truth</div>
+
+<div class="section">
+<div class="sec-title"><h2>Power Chain</h2><span>J_PWR → D1 → J_SW1 → U2 (12→5V) → U3 (5→3.3V)</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="260" viewBox="0 0 1100 260" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<rect x="20" y="80" width="90" height="50" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="20" y="80" width="90" height="18" rx="4" fill="#58a6ff" stroke="none" stroke-width="1.5"/>
+<rect x="20" y="94" width="90" height="4" rx="4" fill="#58a6ff" stroke="none" stroke-width="1.5"/>
+<text x="65" y="93" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_PWR</text>
+<text x="65" y="125" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">12V Terminal</text>
+<text x="65" y="110" font-size="7" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin1=+12V_IN</text>
+<text x="65" y="122" font-size="7" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin2=GND</text>
+<circle cx="110" cy="105" r="3" fill="#ff6b35"/>
+<line x1="110" y1="105" x2="150" y2="105" stroke="#ff6b35" stroke-width="2" />
+<text x="130" y="98" font-size="9" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+12V_IN</text>
+<rect x="150" y="80" width="80" height="38" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="150" y="80" width="80" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="150" y="94" width="80" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="190" y="93" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D1</text>
+<text x="190" y="113" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819  rev.pol.prot</text>
+<text x="158" y="113" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="222" y="113" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="158" y="106" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="222" y="106" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="150" cy="99" r="3" fill="#ff6b35"/>
+<circle cx="230" cy="99" r="3" fill="#ff6b35"/>
+<line x1="230" y1="105" x2="270" y2="105" stroke="#ff6b35" stroke-width="2" />
+<text x="250" y="98" font-size="9" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">12V_PRE_SW</text>
+<rect x="270" y="80" width="110" height="50" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="270" y="80" width="110" height="18" rx="4" fill="#58a6ff" stroke="none" stroke-width="1.5"/>
+<rect x="270" y="94" width="110" height="4" rx="4" fill="#58a6ff" stroke="none" stroke-width="1.5"/>
+<text x="325" y="93" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_SW1</text>
+<text x="325" y="125" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Panel Switch Terminal</text>
+<text x="325" y="108" font-size="7" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin1=12V_PRE_SW</text>
+<text x="325" y="120" font-size="7" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin2=+12V</text>
+<circle cx="270" cy="105" r="3" fill="#ff6b35"/>
+<circle cx="380" cy="105" r="3" fill="#ff6b35"/>
+<line x1="380" y1="105" x2="440" y2="105" stroke="#ff6b35" stroke-width="2.5" />
+<text x="410" y="98" font-size="9" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+12V</text>
+<rect x="440" y="80" width="60" height="34" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="440" y="80" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="440" y="94" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="470" y="93" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C1</text>
+<text x="470" y="109" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100µF 25V</text>
+<circle cx="440" cy="97" r="3" fill="#ff6b35"/>
+<line x1="380" y1="105" x2="380" y2="70" stroke="#ff6b35" stroke-width="1.5" />
+<line x1="380" y1="70" x2="455" y2="70" stroke="#ff6b35" stroke-width="1.5" />
+<line x1="455" y1="70" x2="455" y2="80" stroke="#ff6b35" stroke-width="1.5" />
+<line x1="485" y1="114" x2="485" y2="124" stroke="#778899" stroke-width="1.5" />
+<line x1="473" y1="124" x2="497" y2="124" stroke="#778899" stroke-width="2" />
+<line x1="477" y1="129" x2="493" y2="129" stroke="#778899" stroke-width="1.5" />
+<line x1="481" y1="134" x2="489" y2="134" stroke="#778899" stroke-width="1" />
+<circle cx="500" cy="97" r="3" fill="#ff6b35"/>
+<line x1="380" y1="105" x2="380" y2="160" stroke="#ff6b35" stroke-width="2" />
+<rect x="350" y="150" width="130" height="60" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="350" y="150" width="130" height="18" rx="4" fill="#2a3a1a" stroke="none" stroke-width="1.5"/>
+<rect x="350" y="164" width="130" height="4" rx="4" fill="#2a3a1a" stroke="none" stroke-width="1.5"/>
+<text x="415" y="163" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">U2</text>
+<text x="415" y="205" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">LM2596 Buck 12→5V</text>
+<text x="415" y="178" font-size="7" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IN+(1)=+12V</text>
+<text x="415" y="190" font-size="7" fill="#ffcc00" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">OUT+(3)=+5V</text>
+<text x="415" y="202" font-size="7" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IN-(2)=OUT-(4)=GND</text>
+<circle cx="350" cy="160" r="3" fill="#ff6b35"/>
+<circle cx="480" cy="178" r="3" fill="#ffcc00"/>
+<line x1="480" y1="178" x2="540" y2="178" stroke="#ffcc00" stroke-width="2.5" />
+<text x="510" y="171" font-size="9" fill="#ffcc00" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+5V</text>
+<rect x="540" y="160" width="60" height="34" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="540" y="160" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="540" y="174" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="570" y="173" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C2</text>
+<text x="570" y="189" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100µF 25V</text>
+<circle cx="540" cy="177" r="3" fill="#ffcc00"/>
+<line x1="570" y1="194" x2="570" y2="204" stroke="#778899" stroke-width="1.5" />
+<line x1="558" y1="204" x2="582" y2="204" stroke="#778899" stroke-width="2" />
+<line x1="562" y1="209" x2="578" y2="209" stroke="#778899" stroke-width="1.5" />
+<line x1="566" y1="214" x2="574" y2="214" stroke="#778899" stroke-width="1" />
+<line x1="540" y1="178" x2="600" y2="178" stroke="#ffcc00" stroke-width="2" />
+<line x1="600" y1="178" x2="600" y2="200" stroke="#ffcc00" stroke-width="2" />
+<rect x="560" y="190" width="130" height="60" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="560" y="190" width="130" height="18" rx="4" fill="#1a3a1a" stroke="none" stroke-width="1.5"/>
+<rect x="560" y="204" width="130" height="4" rx="4" fill="#1a3a1a" stroke="none" stroke-width="1.5"/>
+<text x="625" y="203" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">U3</text>
+<text x="625" y="245" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">AMS1117-3.3  5V→3V3</text>
+<text x="625" y="215" font-size="7" fill="#ffcc00" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin3=INPUT(+5V)</text>
+<text x="625" y="227" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin2=OUTPUT(+3V3)</text>
+<text x="625" y="239" font-size="7" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pin1=GND</text>
+<circle cx="560" cy="210" r="3" fill="#ffcc00"/>
+<circle cx="690" cy="210" r="3" fill="#44cc44"/>
+<line x1="690" y1="210" x2="760" y2="210" stroke="#44cc44" stroke-width="2.5" />
+<text x="725" y="203" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="760" y="192" width="60" height="34" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="760" y="192" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="760" y="206" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="790" y="205" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C3</text>
+<text x="790" y="221" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100µF 16V</text>
+<circle cx="760" cy="209" r="3" fill="#44cc44"/>
+<line x1="790" y1="226" x2="790" y2="236" stroke="#778899" stroke-width="1.5" />
+<line x1="778" y1="236" x2="802" y2="236" stroke="#778899" stroke-width="2" />
+<line x1="782" y1="241" x2="798" y2="241" stroke="#778899" stroke-width="1.5" />
+<line x1="786" y1="246" x2="794" y2="246" stroke="#778899" stroke-width="1" />
+<line x1="760" y1="210" x2="760" y2="240" stroke="#44cc44" stroke-width="1.5" />
+<rect x="730" y="232" width="60" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="730" y="232" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="730" y="246" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="760" y="245" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C13</text>
+<text x="760" y="257" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="730" cy="247" r="3" fill="#44cc44"/>
+<line x1="760" y1="253" x2="760" y2="263" stroke="#778899" stroke-width="1.5" />
+<line x1="748" y1="263" x2="772" y2="263" stroke="#778899" stroke-width="2" />
+<line x1="752" y1="268" x2="768" y2="268" stroke="#778899" stroke-width="1.5" />
+<line x1="756" y1="273" x2="764" y2="273" stroke="#778899" stroke-width="1" />
+<text x="500" y="230" font-size="9" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">All GND pins → common GND plane</text>
+<rect x="850" y="80" width="230" height="80" rx="4" fill="#1a1010" stroke="#f85149" stroke-width="1"/>
+<text x="965" y="100" font-size="10" fill="#f85149" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">⚠ Verify AMS1117 pinout</text>
+<text x="965" y="116" font-size="9" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">against your supplier datasheet</text>
+<text x="965" y="132" font-size="9" fill="#d29922" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Some clones: pin1=IN, pin3=GND</text>
+<text x="965" y="148" font-size="9" fill="#d29922" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(opposite to standard!)</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Status LEDs</h2><span>Power rail indicators</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="120" viewBox="0 0 700 120" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="50" y="30" font-size="9" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+12V</text>
+<line x1="30" y1="40" x2="50" y2="40" stroke="#ff6b35" stroke-width="2" />
+<rect x="50" y="25" width="55" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="50" y="25" width="55" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="50" y="39" width="55" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="77" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R13</text>
+<text x="77" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="50" cy="40" r="3" fill="#ff6b35"/>
+<line x1="105" y1="40" x2="130" y2="40" stroke="#ff6b35" stroke-width="1.5" />
+<rect x="130" y="25" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="130" y="25" width="65" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="130" y="39" width="65" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="162" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED1</text>
+<text x="162" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Red   12V</text>
+<circle cx="130" cy="40" r="3" fill="#ff6b35"/>
+<line x1="195" y1="40" x2="205" y2="40" stroke="#778899" stroke-width="1.5" />
+<line x1="205" y1="40" x2="205" y2="50" stroke="#778899" stroke-width="1.5" />
+<line x1="193" y1="50" x2="217" y2="50" stroke="#778899" stroke-width="2" />
+<line x1="197" y1="55" x2="213" y2="55" stroke="#778899" stroke-width="1.5" />
+<line x1="201" y1="60" x2="209" y2="60" stroke="#778899" stroke-width="1" />
+<text x="50" y="90" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→+12V  K→GND</text>
+<text x="270" y="30" font-size="9" fill="#ffcc00" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+5V</text>
+<line x1="250" y1="40" x2="270" y2="40" stroke="#ffcc00" stroke-width="2" />
+<rect x="270" y="25" width="55" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="270" y="25" width="55" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="270" y="39" width="55" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="297" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R14</text>
+<text x="297" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="270" cy="40" r="3" fill="#ffcc00"/>
+<line x1="325" y1="40" x2="350" y2="40" stroke="#ffcc00" stroke-width="1.5" />
+<rect x="350" y="25" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="350" y="25" width="65" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="350" y="39" width="65" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="382" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED2</text>
+<text x="382" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Yellow 5V</text>
+<circle cx="350" cy="40" r="3" fill="#ffcc00"/>
+<line x1="415" y1="40" x2="425" y2="40" stroke="#778899" stroke-width="1.5" />
+<line x1="425" y1="40" x2="425" y2="50" stroke="#778899" stroke-width="1.5" />
+<line x1="413" y1="50" x2="437" y2="50" stroke="#778899" stroke-width="2" />
+<line x1="417" y1="55" x2="433" y2="55" stroke="#778899" stroke-width="1.5" />
+<line x1="421" y1="60" x2="429" y2="60" stroke="#778899" stroke-width="1" />
+<text x="270" y="90" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→+5V  K→GND</text>
+<text x="490" y="30" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="470" y1="40" x2="490" y2="40" stroke="#44cc44" stroke-width="2" />
+<rect x="490" y="25" width="55" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="490" y="25" width="55" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="490" y="39" width="55" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="517" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R15</text>
+<text x="517" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="490" cy="40" r="3" fill="#44cc44"/>
+<line x1="545" y1="40" x2="570" y2="40" stroke="#44cc44" stroke-width="1.5" />
+<rect x="570" y="25" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="570" y="25" width="65" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="570" y="39" width="65" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="602" y="38" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED3</text>
+<text x="602" y="50" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Green 3V3</text>
+<circle cx="570" cy="40" r="3" fill="#44cc44"/>
+<line x1="635" y1="40" x2="645" y2="40" stroke="#778899" stroke-width="1.5" />
+<line x1="645" y1="40" x2="645" y2="50" stroke="#778899" stroke-width="1.5" />
+<line x1="633" y1="50" x2="657" y2="50" stroke="#778899" stroke-width="2" />
+<line x1="637" y1="55" x2="653" y2="55" stroke="#778899" stroke-width="1.5" />
+<line x1="641" y1="60" x2="649" y2="60" stroke="#778899" stroke-width="1" />
+<text x="490" y="90" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→+3V3  K→GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Diode Polarity Reference</h2><span>DO-41 footprint convention — read before assembling</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="200" viewBox="0 0 900 200" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="450" y="18" font-size="12" fill="#f85149" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">DIODE POLARITY — KiCad D_DO-41 Footprint Convention</text>
+<rect x="10" y="30" width="260" height="50" rx="4" fill="#1a1010" stroke="#f85149" stroke-width="1"/>
+<text x="140" y="48" font-size="8" fill="#f85149" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">DO-41 FOOTPRINT: pad1=CATHODE(K)  pad2=ANODE(A)</text>
+<text x="140" y="62" font-size="8" fill="#d29922" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Band (stripe) on component body = CATHODE end</text>
+<text x="10" y="95" font-size="9" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">EXAMPLE D2 (VCC protection):</text>
+<text x="10" y="110" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3 bus → ANODE(A) → CATHODE(K) → MST_A_VCC → sensor</text>
+<text x="10" y="125" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Schematic pin1→MST_A_VCC, pin2→+3V3 (pin1=A in symbol, but pad1=K in footprint)</text>
+<text x="10" y="140" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">∴ Physical board: pad1(K)=MST_A_VCC, pad2(A)=+3V3  → current flows +3V3→sensor ✓</text>
+<text x="10" y="158" font-size="9" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">EXAMPLE D10 (TVS clamp):</text>
+<text x="10" y="173" font-size="9" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">CATHODE(K) → MST_A_SIG signal line    ANODE(A) → GND</text>
+<text x="10" y="188" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Reverse biased in normal op. Clamps voltage spikes above 3.3V to protect ESP32 ADC.</text>
+<text x="470" y="95" font-size="9" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">EXAMPLE D1 (reverse polarity protection):</text>
+<text x="470" y="110" font-size="9" fill="#ff6b35" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ANODE(A) → +12V_IN     CATHODE(K) → 12V_PRE_SW</text>
+<text x="470" y="125" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Normal: forward biased — passes +12V to switch</text>
+<text x="470" y="140" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Reverse polarity: reverse biased — blocks current → protects board</text>
+<text x="470" y="158" font-size="8" fill="#d29922" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Band on body faces away from J_PWR (toward J_SW1)</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>ESP32 GPIO Assignments</h2><span>U1 ESP32-DevKitC-32E socket</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="560" viewBox="0 0 820 560" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="410" y="18" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32-DevKitC-32E Socket — GPIO Assignments</text>
+<rect x="280" y="35" width="260" height="500" rx="6" fill="#0d1f12" stroke="#3fb950" stroke-width="2"/>
+<text x="410" y="55" font-size="11" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">U1  ESP32-DevKitC-32E</text>
+<text x="410" y="68" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Socket 2×19 pins P2.54mm</text>
+<circle cx="280" cy="80" r="3" fill="#778899"/>
+<text x="275" y="84" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad1</text>
+<text x="245" y="84" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<text x="200" y="84" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<line x1="0" y1="80" x2="200" y2="80" stroke="#778899" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="104" r="3" fill="#ffaa44"/>
+<text x="275" y="108" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad3</text>
+<text x="245" y="108" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO23</text>
+<text x="200" y="108" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SD_MOSI</text>
+<line x1="0" y1="104" x2="200" y2="104" stroke="#ffaa44" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="128" r="3" fill="#4488ff"/>
+<text x="275" y="132" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad5</text>
+<text x="245" y="132" font-size="8" fill="#4488ff" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO22</text>
+<text x="200" y="132" font-size="8" fill="#4488ff" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SCL</text>
+<line x1="0" y1="128" x2="200" y2="128" stroke="#4488ff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="152" r="3" fill="#8b949e"/>
+<text x="275" y="156" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad7</text>
+<text x="245" y="156" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">TXD0</text>
+<text x="200" y="156" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">PI_TX</text>
+<line x1="0" y1="152" x2="200" y2="152" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="176" r="3" fill="#8b949e"/>
+<text x="275" y="180" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad9</text>
+<text x="245" y="180" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">RXD0</text>
+<text x="200" y="180" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">PI_RX</text>
+<line x1="0" y1="176" x2="200" y2="176" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="200" r="3" fill="#66aaff"/>
+<text x="275" y="204" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad11</text>
+<text x="245" y="204" font-size="8" fill="#66aaff" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO21</text>
+<text x="200" y="204" font-size="8" fill="#66aaff" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SDA</text>
+<line x1="0" y1="200" x2="200" y2="200" stroke="#66aaff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="224" r="3" fill="#778899"/>
+<text x="275" y="228" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad13</text>
+<text x="245" y="228" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<text x="200" y="228" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<line x1="0" y1="224" x2="200" y2="224" stroke="#778899" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="248" r="3" fill="#ffaa44"/>
+<text x="275" y="252" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad15</text>
+<text x="245" y="252" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO19</text>
+<text x="200" y="252" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SD_MISO</text>
+<line x1="0" y1="248" x2="200" y2="248" stroke="#ffaa44" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="272" r="3" fill="#ffaa44"/>
+<text x="275" y="276" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad17</text>
+<text x="245" y="276" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO18</text>
+<text x="200" y="276" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SD_SCK</text>
+<line x1="0" y1="272" x2="200" y2="272" stroke="#ffaa44" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="296" r="3" fill="#ffaa44"/>
+<text x="275" y="300" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad19</text>
+<text x="245" y="300" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO5</text>
+<text x="200" y="300" font-size="8" fill="#ffaa44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">SD_CS</text>
+<line x1="0" y1="296" x2="200" y2="296" stroke="#ffaa44" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="320" r="3" fill="#8b949e"/>
+<text x="275" y="324" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad21</text>
+<text x="245" y="324" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO17</text>
+<text x="200" y="324" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="0" y1="320" x2="200" y2="320" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="344" r="3" fill="#8b949e"/>
+<text x="275" y="348" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad23</text>
+<text x="245" y="348" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO16</text>
+<text x="200" y="348" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="0" y1="344" x2="200" y2="344" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="368" r="3" fill="#8b949e"/>
+<text x="275" y="372" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad25</text>
+<text x="245" y="372" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO4</text>
+<text x="200" y="372" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="0" y1="368" x2="200" y2="368" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="392" r="3" fill="#f85149"/>
+<text x="275" y="396" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad27</text>
+<text x="245" y="396" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO0</text>
+<text x="200" y="396" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC ⚠boot</text>
+<line x1="0" y1="392" x2="200" y2="392" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="416" r="3" fill="#f85149"/>
+<text x="275" y="420" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad29</text>
+<text x="245" y="420" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO2</text>
+<text x="200" y="420" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC ⚠boot</text>
+<line x1="0" y1="416" x2="200" y2="416" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="440" r="3" fill="#8b949e"/>
+<text x="275" y="444" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad31</text>
+<text x="245" y="444" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO15</text>
+<text x="200" y="444" font-size="8" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="0" y1="440" x2="200" y2="440" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="464" r="3" fill="#778899"/>
+<text x="275" y="468" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad33</text>
+<text x="245" y="468" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<text x="200" y="468" font-size="8" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<line x1="0" y1="464" x2="200" y2="464" stroke="#778899" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="488" r="3" fill="#f85149"/>
+<text x="275" y="492" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad35</text>
+<text x="245" y="492" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO8*</text>
+<text x="200" y="492" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC ⚠flash</text>
+<line x1="0" y1="488" x2="200" y2="488" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="280" cy="512" r="3" fill="#f85149"/>
+<text x="275" y="516" font-size="7" fill="#8b949e" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">pad37</text>
+<text x="245" y="516" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">IO7*</text>
+<text x="200" y="516" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">NC ⚠flash</text>
+<line x1="0" y1="512" x2="200" y2="512" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="80" r="3" fill="#3fb950"/>
+<text x="545" y="84" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad2</text>
+<text x="580" y="84" font-size="8" fill="#3fb950" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">3V3out</text>
+<text x="620" y="84" font-size="8" fill="#3fb950" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">ESP_3V3</text>
+<line x1="620" y1="80" x2="820" y2="80" stroke="#3fb950" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="104" r="3" fill="#8b949e"/>
+<text x="545" y="108" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad4</text>
+<text x="580" y="108" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">EN</text>
+<text x="620" y="108" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="620" y1="104" x2="820" y2="104" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="128" r="3" fill="#8b949e"/>
+<text x="545" y="132" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad6</text>
+<text x="580" y="132" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO36</text>
+<text x="620" y="132" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="620" y1="128" x2="820" y2="128" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="152" r="3" fill="#8b949e"/>
+<text x="545" y="156" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad8</text>
+<text x="580" y="156" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO39</text>
+<text x="620" y="156" font-size="8" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC</text>
+<line x1="620" y1="152" x2="820" y2="152" stroke="#8b949e" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="176" r="3" fill="#cc88ff"/>
+<text x="545" y="180" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad10</text>
+<text x="580" y="180" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO34</text>
+<text x="620" y="180" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">MST_C_SIG</text>
+<line x1="620" y1="176" x2="820" y2="176" stroke="#cc88ff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="200" r="3" fill="#cc88ff"/>
+<text x="545" y="204" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad12</text>
+<text x="580" y="204" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO35</text>
+<text x="620" y="204" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">MST_D_SIG</text>
+<line x1="620" y1="200" x2="820" y2="200" stroke="#cc88ff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="224" r="3" fill="#cc88ff"/>
+<text x="545" y="228" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad14</text>
+<text x="580" y="228" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO32</text>
+<text x="620" y="228" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">MST_A_SIG</text>
+<line x1="620" y1="224" x2="820" y2="224" stroke="#cc88ff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="248" r="3" fill="#cc88ff"/>
+<text x="545" y="252" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad16</text>
+<text x="580" y="252" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO33</text>
+<text x="620" y="252" font-size="8" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">MST_B_SIG</text>
+<line x1="620" y1="248" x2="820" y2="248" stroke="#cc88ff" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="272" r="3" fill="#ff8844"/>
+<text x="545" y="276" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad18</text>
+<text x="580" y="276" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO25</text>
+<text x="620" y="276" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">RLY_A_SW</text>
+<line x1="620" y1="272" x2="820" y2="272" stroke="#ff8844" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="296" r="3" fill="#ff8844"/>
+<text x="545" y="300" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad20</text>
+<text x="580" y="300" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO26</text>
+<text x="620" y="300" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">RLY_B_SW</text>
+<line x1="620" y1="296" x2="820" y2="296" stroke="#ff8844" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="320" r="3" fill="#ff88cc"/>
+<text x="545" y="324" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad22</text>
+<text x="580" y="324" font-size="8" fill="#ff88cc" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO27</text>
+<text x="620" y="324" font-size="8" fill="#ff88cc" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">DHT_DATA</text>
+<line x1="620" y1="320" x2="820" y2="320" stroke="#ff88cc" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="344" r="3" fill="#ff8844"/>
+<text x="545" y="348" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad24</text>
+<text x="580" y="348" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO14</text>
+<text x="620" y="348" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">RLY_D_SW</text>
+<line x1="620" y1="344" x2="820" y2="344" stroke="#ff8844" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="368" r="3" fill="#f85149"/>
+<text x="545" y="372" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad26</text>
+<text x="580" y="372" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO12</text>
+<text x="620" y="372" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC ⚠boot</text>
+<line x1="620" y1="368" x2="820" y2="368" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="392" r="3" fill="#778899"/>
+<text x="545" y="396" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad28</text>
+<text x="580" y="396" font-size="8" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<text x="620" y="396" font-size="8" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">GND</text>
+<line x1="620" y1="392" x2="820" y2="392" stroke="#778899" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="416" r="3" fill="#ff8844"/>
+<text x="545" y="420" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad30</text>
+<text x="580" y="420" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO13</text>
+<text x="620" y="420" font-size="8" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">RLY_C_SW</text>
+<line x1="620" y1="416" x2="820" y2="416" stroke="#ff8844" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="440" r="3" fill="#f85149"/>
+<text x="545" y="444" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad32</text>
+<text x="580" y="444" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO9*</text>
+<text x="620" y="444" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC ⚠flash</text>
+<line x1="620" y1="440" x2="820" y2="440" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="464" r="3" fill="#f85149"/>
+<text x="545" y="468" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad34</text>
+<text x="580" y="468" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO10*</text>
+<text x="620" y="468" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC ⚠flash</text>
+<line x1="620" y1="464" x2="820" y2="464" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="488" r="3" fill="#f85149"/>
+<text x="545" y="492" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad36</text>
+<text x="580" y="492" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">IO11*</text>
+<text x="620" y="492" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">NC ⚠flash</text>
+<line x1="620" y1="488" x2="820" y2="488" stroke="#f85149" stroke-width="1" stroke-dasharray="4,3"/>
+<circle cx="540" cy="512" r="3" fill="#ffcc00"/>
+<text x="545" y="516" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pad38</text>
+<text x="580" y="516" font-size="8" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">VIN</text>
+<text x="620" y="516" font-size="8" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">+5V</text>
+<line x1="620" y1="512" x2="820" y2="512" stroke="#ffcc00" stroke-width="1" stroke-dasharray="4,3"/>
+<text x="5" y="540" font-size="8" fill="#f85149" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">⚠ NC = Not Connected  |  * = connected to internal flash — must leave NC  |  ⚠boot = strapping pin — must leave NC</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Zone A</h2>
+<span>Relay driver + moisture sensor · RJ45 connector J_ZONE_A</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="500" y="20" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ZONE A — Relay Driver + Moisture Sensor</text>
+<text x="30" y="45" font-size="9" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— RELAY DRIVER —</text>
+<rect x="10" y="55" width="120" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="70" y="66" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="70" y="78" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO25→RLY_A_SW</text>
+<circle cx="130" cy="70" r="3" fill="#ff8844"/>
+<line x1="130" y1="70" x2="160" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="145" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_A_SW</text>
+<rect x="160" y="55" width="70" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="160" y="55" width="70" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="160" y="69" width="70" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="195" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SW2</text>
+<text x="195" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pos 1</text>
+<circle cx="160" cy="70" r="3" fill="#ff8844"/>
+<circle cx="230" cy="70" r="3" fill="#ff8844"/>
+<line x1="230" y1="70" x2="260" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="245" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_A_IN</text>
+<circle cx="260" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="260" y1="70" x2="260" y2="100" stroke="#778899" stroke-width="1.5" />
+<rect x="230" y="100" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="230" y="100" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="230" y="114" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="260" y="113" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R16</text>
+<text x="260" y="123" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">10kΩ</text>
+<circle cx="230" cy="114" r="3" fill="#778899"/>
+<line x1="260" y1="128" x2="260" y2="138" stroke="#778899" stroke-width="1.5" />
+<line x1="248" y1="138" x2="272" y2="138" stroke="#778899" stroke-width="2" />
+<line x1="252" y1="143" x2="268" y2="143" stroke="#778899" stroke-width="1.5" />
+<line x1="256" y1="148" x2="264" y2="148" stroke="#778899" stroke-width="1" />
+<text x="300" y="120" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(pulldown
+holds off
+when idle)</text>
+<line x1="260" y1="70" x2="320" y2="70" stroke="#ff8844" stroke-width="2" />
+<rect x="320" y="55" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="320" y="55" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="320" y="69" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="352" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R1</text>
+<text x="352" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="320" cy="70" r="3" fill="#ff8844"/>
+<circle cx="385" cy="70" r="3" fill="#ff8844"/>
+<line x1="385" y1="70" x2="420" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="400" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_A_OUT</text>
+<circle cx="420" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="420" y1="70" x2="480" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="450" y="62" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin4</text>
+<line x1="420" y1="70" x2="420" y2="140" stroke="#ff8844" stroke-width="1.5" />
+<rect x="390" y="140" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="390" y="140" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="390" y="154" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="422" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R9</text>
+<text x="422" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="390" cy="154" r="3" fill="#ff8844"/>
+<line x1="390" y1="154" x2="455" y2="154" stroke="#ff8844" stroke-width="1.5" />
+<text x="422" y="146" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ZA_LED_A</text>
+<rect x="455" y="140" width="70" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="455" y="140" width="70" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="455" y="154" width="70" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="490" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED4</text>
+<text x="490" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Zone LED</text>
+<circle cx="455" cy="154" r="3" fill="#ff8844"/>
+<line x1="525" y1="154" x2="535" y2="154" stroke="#778899" stroke-width="1.5" />
+<line x1="535" y1="154" x2="535" y2="164" stroke="#778899" stroke-width="1.5" />
+<line x1="523" y1="164" x2="547" y2="164" stroke="#778899" stroke-width="2" />
+<line x1="527" y1="169" x2="543" y2="169" stroke="#778899" stroke-width="1.5" />
+<line x1="531" y1="174" x2="539" y2="174" stroke="#778899" stroke-width="1" />
+<text x="460" y="185" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→rly_out via R  K→GND</text>
+<text x="30" y="225" font-size="9" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— MOISTURE SENSOR —</text>
+<text x="10" y="250" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="260" x2="80" y2="260" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="245" width="90" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="245" width="90" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="259" width="90" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="125" y="258" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D2</text>
+<text x="125" y="276" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819  VCC prot</text>
+<text x="88" y="276" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="162" y="276" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="88" y="271" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="162" y="271" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="80" cy="263" r="3" fill="#44cc44"/>
+<circle cx="170" cy="263" r="3" fill="#44cc44"/>
+<line x1="170" y1="263" x2="210" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="190" y="255" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_A_VCC</text>
+<circle cx="210" cy="263" r="3.5" fill="#aaaaaa"/>
+<line x1="210" y1="263" x2="210" y2="295" stroke="#44cc44" stroke-width="1.5" />
+<rect x="180" y="295" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="180" y="295" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="180" y="309" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="210" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C4</text>
+<text x="210" y="318" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="180" cy="309" r="3" fill="#44cc44"/>
+<line x1="210" y1="323" x2="210" y2="333" stroke="#778899" stroke-width="1.5" />
+<line x1="198" y1="333" x2="222" y2="333" stroke="#778899" stroke-width="2" />
+<line x1="202" y1="338" x2="218" y2="338" stroke="#778899" stroke-width="1.5" />
+<line x1="206" y1="343" x2="214" y2="343" stroke="#778899" stroke-width="1" />
+<line x1="210" y1="263" x2="250" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="230" y="255" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin3</text>
+<text x="310" y="230" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">← J_ZONE pin1 (sensor signal)</text>
+<line x1="310" y1="245" x2="380" y2="245" stroke="#cc88ff" stroke-width="2" />
+<text x="345" y="237" font-size="8" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_A_SIG</text>
+<circle cx="380" cy="245" r="3.5" fill="#aaaaaa"/>
+<line x1="380" y1="245" x2="380" y2="295" stroke="#cc88ff" stroke-width="1.5" />
+<rect x="330" y="295" width="100" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="330" y="295" width="100" height="18" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<rect x="330" y="309" width="100" height="4" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<text x="380" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D10</text>
+<text x="380" y="326" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">P6KE3.3A TVS</text>
+<text x="338" y="326" font-size="7" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">K→signal</text>
+<text x="422" y="326" font-size="7" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">A→GND</text>
+<circle cx="330" cy="313" r="3" fill="#cc88ff"/>
+<line x1="380" y1="331" x2="380" y2="341" stroke="#778899" stroke-width="1.5" />
+<line x1="368" y1="341" x2="392" y2="341" stroke="#778899" stroke-width="2" />
+<line x1="372" y1="346" x2="388" y2="346" stroke="#778899" stroke-width="1.5" />
+<line x1="376" y1="351" x2="384" y2="351" stroke="#778899" stroke-width="1" />
+<text x="330" y="345" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">K=signal  A=GND</text>
+<text x="330" y="356" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Rev.biased normally</text>
+<text x="330" y="367" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Clamps spikes >3.3V</text>
+<line x1="380" y1="245" x2="450" y2="245" stroke="#cc88ff" stroke-width="2" />
+<rect x="450" y="230" width="130" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="515" y="242" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="515" y="255" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO32←MST_A_SIG</text>
+<circle cx="450" cy="245" r="3" fill="#cc88ff"/>
+<rect x="550" y="225" width="200" height="150" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="650" y="242" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_ZONE_A</text>
+<text x="650" y="255" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RJ45  T568B wiring</text>
+<circle cx="558" cy="266" r="3" fill="#cc88ff"/>
+<text x="564" y="270" font-size="7.5" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin1=MST_A_SIG</text>
+<circle cx="558" cy="277" r="3" fill="#778899"/>
+<text x="564" y="281" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin2=GND</text>
+<circle cx="558" cy="288" r="3" fill="#44cc44"/>
+<text x="564" y="292" font-size="7.5" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin3=MST_A_VCC</text>
+<circle cx="558" cy="299" r="3" fill="#ff8844"/>
+<text x="564" y="303" font-size="7.5" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin4=RLY_A_OUT</text>
+<circle cx="558" cy="310" r="3" fill="#778899"/>
+<text x="564" y="314" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin5=GND</text>
+<circle cx="558" cy="321" r="3" fill="#778899"/>
+<text x="564" y="325" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin6=GND</text>
+<circle cx="558" cy="332" r="3" fill="#ffcc00"/>
+<text x="564" y="336" font-size="7.5" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin7=+5V</text>
+<circle cx="558" cy="343" r="3" fill="#778899"/>
+<text x="564" y="347" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin8=GND</text>
+<circle cx="558" cy="354" r="3" fill="#778899"/>
+<text x="564" y="358" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pinS=GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Zone B</h2>
+<span>Relay driver + moisture sensor · RJ45 connector J_ZONE_B</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="500" y="20" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ZONE B — Relay Driver + Moisture Sensor</text>
+<text x="30" y="45" font-size="9" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— RELAY DRIVER —</text>
+<rect x="10" y="55" width="120" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="70" y="66" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="70" y="78" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO26→RLY_B_SW</text>
+<circle cx="130" cy="70" r="3" fill="#ff8844"/>
+<line x1="130" y1="70" x2="160" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="145" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_B_SW</text>
+<rect x="160" y="55" width="70" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="160" y="55" width="70" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="160" y="69" width="70" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="195" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SW2</text>
+<text x="195" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pos 2</text>
+<circle cx="160" cy="70" r="3" fill="#ff8844"/>
+<circle cx="230" cy="70" r="3" fill="#ff8844"/>
+<line x1="230" y1="70" x2="260" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="245" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_B_IN</text>
+<circle cx="260" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="260" y1="70" x2="260" y2="100" stroke="#778899" stroke-width="1.5" />
+<rect x="230" y="100" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="230" y="100" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="230" y="114" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="260" y="113" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R17</text>
+<text x="260" y="123" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">10kΩ</text>
+<circle cx="230" cy="114" r="3" fill="#778899"/>
+<line x1="260" y1="128" x2="260" y2="138" stroke="#778899" stroke-width="1.5" />
+<line x1="248" y1="138" x2="272" y2="138" stroke="#778899" stroke-width="2" />
+<line x1="252" y1="143" x2="268" y2="143" stroke="#778899" stroke-width="1.5" />
+<line x1="256" y1="148" x2="264" y2="148" stroke="#778899" stroke-width="1" />
+<text x="300" y="120" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(pulldown
+holds off
+when idle)</text>
+<line x1="260" y1="70" x2="320" y2="70" stroke="#ff8844" stroke-width="2" />
+<rect x="320" y="55" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="320" y="55" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="320" y="69" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="352" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R2</text>
+<text x="352" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="320" cy="70" r="3" fill="#ff8844"/>
+<circle cx="385" cy="70" r="3" fill="#ff8844"/>
+<line x1="385" y1="70" x2="420" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="400" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_B_OUT</text>
+<circle cx="420" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="420" y1="70" x2="480" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="450" y="62" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin4</text>
+<line x1="420" y1="70" x2="420" y2="140" stroke="#ff8844" stroke-width="1.5" />
+<rect x="390" y="140" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="390" y="140" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="390" y="154" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="422" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R10</text>
+<text x="422" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="390" cy="154" r="3" fill="#ff8844"/>
+<line x1="390" y1="154" x2="455" y2="154" stroke="#ff8844" stroke-width="1.5" />
+<text x="422" y="146" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ZB_LED_A</text>
+<rect x="455" y="140" width="70" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="455" y="140" width="70" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="455" y="154" width="70" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="490" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED5</text>
+<text x="490" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Zone LED</text>
+<circle cx="455" cy="154" r="3" fill="#ff8844"/>
+<line x1="525" y1="154" x2="535" y2="154" stroke="#778899" stroke-width="1.5" />
+<line x1="535" y1="154" x2="535" y2="164" stroke="#778899" stroke-width="1.5" />
+<line x1="523" y1="164" x2="547" y2="164" stroke="#778899" stroke-width="2" />
+<line x1="527" y1="169" x2="543" y2="169" stroke="#778899" stroke-width="1.5" />
+<line x1="531" y1="174" x2="539" y2="174" stroke="#778899" stroke-width="1" />
+<text x="460" y="185" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→rly_out via R  K→GND</text>
+<text x="30" y="225" font-size="9" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— MOISTURE SENSOR —</text>
+<text x="10" y="250" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="260" x2="80" y2="260" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="245" width="90" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="245" width="90" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="259" width="90" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="125" y="258" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D3</text>
+<text x="125" y="276" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819  VCC prot</text>
+<text x="88" y="276" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="162" y="276" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="88" y="271" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="162" y="271" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="80" cy="263" r="3" fill="#44cc44"/>
+<circle cx="170" cy="263" r="3" fill="#44cc44"/>
+<line x1="170" y1="263" x2="210" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="190" y="255" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_B_VCC</text>
+<circle cx="210" cy="263" r="3.5" fill="#aaaaaa"/>
+<line x1="210" y1="263" x2="210" y2="295" stroke="#44cc44" stroke-width="1.5" />
+<rect x="180" y="295" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="180" y="295" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="180" y="309" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="210" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C5</text>
+<text x="210" y="318" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="180" cy="309" r="3" fill="#44cc44"/>
+<line x1="210" y1="323" x2="210" y2="333" stroke="#778899" stroke-width="1.5" />
+<line x1="198" y1="333" x2="222" y2="333" stroke="#778899" stroke-width="2" />
+<line x1="202" y1="338" x2="218" y2="338" stroke="#778899" stroke-width="1.5" />
+<line x1="206" y1="343" x2="214" y2="343" stroke="#778899" stroke-width="1" />
+<line x1="210" y1="263" x2="250" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="230" y="255" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin3</text>
+<text x="310" y="230" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">← J_ZONE pin1 (sensor signal)</text>
+<line x1="310" y1="245" x2="380" y2="245" stroke="#cc88ff" stroke-width="2" />
+<text x="345" y="237" font-size="8" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_B_SIG</text>
+<circle cx="380" cy="245" r="3.5" fill="#aaaaaa"/>
+<line x1="380" y1="245" x2="380" y2="295" stroke="#cc88ff" stroke-width="1.5" />
+<rect x="330" y="295" width="100" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="330" y="295" width="100" height="18" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<rect x="330" y="309" width="100" height="4" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<text x="380" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D11</text>
+<text x="380" y="326" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">P6KE3.3A TVS</text>
+<text x="338" y="326" font-size="7" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">K→signal</text>
+<text x="422" y="326" font-size="7" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">A→GND</text>
+<circle cx="330" cy="313" r="3" fill="#cc88ff"/>
+<line x1="380" y1="331" x2="380" y2="341" stroke="#778899" stroke-width="1.5" />
+<line x1="368" y1="341" x2="392" y2="341" stroke="#778899" stroke-width="2" />
+<line x1="372" y1="346" x2="388" y2="346" stroke="#778899" stroke-width="1.5" />
+<line x1="376" y1="351" x2="384" y2="351" stroke="#778899" stroke-width="1" />
+<text x="330" y="345" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">K=signal  A=GND</text>
+<text x="330" y="356" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Rev.biased normally</text>
+<text x="330" y="367" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Clamps spikes >3.3V</text>
+<line x1="380" y1="245" x2="450" y2="245" stroke="#cc88ff" stroke-width="2" />
+<rect x="450" y="230" width="130" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="515" y="242" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="515" y="255" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO33←MST_B_SIG</text>
+<circle cx="450" cy="245" r="3" fill="#cc88ff"/>
+<rect x="550" y="225" width="200" height="150" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="650" y="242" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_ZONE_B</text>
+<text x="650" y="255" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RJ45  T568B wiring</text>
+<circle cx="558" cy="266" r="3" fill="#cc88ff"/>
+<text x="564" y="270" font-size="7.5" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin1=MST_B_SIG</text>
+<circle cx="558" cy="277" r="3" fill="#778899"/>
+<text x="564" y="281" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin2=GND</text>
+<circle cx="558" cy="288" r="3" fill="#44cc44"/>
+<text x="564" y="292" font-size="7.5" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin3=MST_B_VCC</text>
+<circle cx="558" cy="299" r="3" fill="#ff8844"/>
+<text x="564" y="303" font-size="7.5" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin4=RLY_B_OUT</text>
+<circle cx="558" cy="310" r="3" fill="#778899"/>
+<text x="564" y="314" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin5=GND</text>
+<circle cx="558" cy="321" r="3" fill="#778899"/>
+<text x="564" y="325" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin6=GND</text>
+<circle cx="558" cy="332" r="3" fill="#ffcc00"/>
+<text x="564" y="336" font-size="7.5" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin7=+5V</text>
+<circle cx="558" cy="343" r="3" fill="#778899"/>
+<text x="564" y="347" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin8=GND</text>
+<circle cx="558" cy="354" r="3" fill="#778899"/>
+<text x="564" y="358" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pinS=GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Zone C</h2>
+<span>Relay driver + moisture sensor · RJ45 connector J_ZONE_C</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="500" y="20" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ZONE C — Relay Driver + Moisture Sensor</text>
+<text x="30" y="45" font-size="9" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— RELAY DRIVER —</text>
+<rect x="10" y="55" width="120" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="70" y="66" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="70" y="78" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO13→RLY_C_SW</text>
+<circle cx="130" cy="70" r="3" fill="#ff8844"/>
+<line x1="130" y1="70" x2="160" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="145" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_C_SW</text>
+<rect x="160" y="55" width="70" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="160" y="55" width="70" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="160" y="69" width="70" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="195" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SW2</text>
+<text x="195" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pos 3</text>
+<circle cx="160" cy="70" r="3" fill="#ff8844"/>
+<circle cx="230" cy="70" r="3" fill="#ff8844"/>
+<line x1="230" y1="70" x2="260" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="245" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_C_IN</text>
+<circle cx="260" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="260" y1="70" x2="260" y2="100" stroke="#778899" stroke-width="1.5" />
+<rect x="230" y="100" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="230" y="100" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="230" y="114" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="260" y="113" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R18</text>
+<text x="260" y="123" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">10kΩ</text>
+<circle cx="230" cy="114" r="3" fill="#778899"/>
+<line x1="260" y1="128" x2="260" y2="138" stroke="#778899" stroke-width="1.5" />
+<line x1="248" y1="138" x2="272" y2="138" stroke="#778899" stroke-width="2" />
+<line x1="252" y1="143" x2="268" y2="143" stroke="#778899" stroke-width="1.5" />
+<line x1="256" y1="148" x2="264" y2="148" stroke="#778899" stroke-width="1" />
+<text x="300" y="120" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(pulldown
+holds off
+when idle)</text>
+<line x1="260" y1="70" x2="320" y2="70" stroke="#ff8844" stroke-width="2" />
+<rect x="320" y="55" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="320" y="55" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="320" y="69" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="352" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R3</text>
+<text x="352" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="320" cy="70" r="3" fill="#ff8844"/>
+<circle cx="385" cy="70" r="3" fill="#ff8844"/>
+<line x1="385" y1="70" x2="420" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="400" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_C_OUT</text>
+<circle cx="420" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="420" y1="70" x2="480" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="450" y="62" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin4</text>
+<line x1="420" y1="70" x2="420" y2="140" stroke="#ff8844" stroke-width="1.5" />
+<rect x="390" y="140" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="390" y="140" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="390" y="154" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="422" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R11</text>
+<text x="422" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="390" cy="154" r="3" fill="#ff8844"/>
+<line x1="390" y1="154" x2="455" y2="154" stroke="#ff8844" stroke-width="1.5" />
+<text x="422" y="146" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ZC_LED_A</text>
+<rect x="455" y="140" width="70" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="455" y="140" width="70" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="455" y="154" width="70" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="490" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED6</text>
+<text x="490" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Zone LED</text>
+<circle cx="455" cy="154" r="3" fill="#ff8844"/>
+<line x1="525" y1="154" x2="535" y2="154" stroke="#778899" stroke-width="1.5" />
+<line x1="535" y1="154" x2="535" y2="164" stroke="#778899" stroke-width="1.5" />
+<line x1="523" y1="164" x2="547" y2="164" stroke="#778899" stroke-width="2" />
+<line x1="527" y1="169" x2="543" y2="169" stroke="#778899" stroke-width="1.5" />
+<line x1="531" y1="174" x2="539" y2="174" stroke="#778899" stroke-width="1" />
+<text x="460" y="185" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→rly_out via R  K→GND</text>
+<text x="30" y="225" font-size="9" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— MOISTURE SENSOR —</text>
+<text x="10" y="250" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="260" x2="80" y2="260" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="245" width="90" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="245" width="90" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="259" width="90" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="125" y="258" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D4</text>
+<text x="125" y="276" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819  VCC prot</text>
+<text x="88" y="276" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="162" y="276" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="88" y="271" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="162" y="271" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="80" cy="263" r="3" fill="#44cc44"/>
+<circle cx="170" cy="263" r="3" fill="#44cc44"/>
+<line x1="170" y1="263" x2="210" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="190" y="255" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_C_VCC</text>
+<circle cx="210" cy="263" r="3.5" fill="#aaaaaa"/>
+<line x1="210" y1="263" x2="210" y2="295" stroke="#44cc44" stroke-width="1.5" />
+<rect x="180" y="295" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="180" y="295" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="180" y="309" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="210" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C6</text>
+<text x="210" y="318" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="180" cy="309" r="3" fill="#44cc44"/>
+<line x1="210" y1="323" x2="210" y2="333" stroke="#778899" stroke-width="1.5" />
+<line x1="198" y1="333" x2="222" y2="333" stroke="#778899" stroke-width="2" />
+<line x1="202" y1="338" x2="218" y2="338" stroke="#778899" stroke-width="1.5" />
+<line x1="206" y1="343" x2="214" y2="343" stroke="#778899" stroke-width="1" />
+<line x1="210" y1="263" x2="250" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="230" y="255" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin3</text>
+<text x="310" y="230" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">← J_ZONE pin1 (sensor signal)</text>
+<line x1="310" y1="245" x2="380" y2="245" stroke="#cc88ff" stroke-width="2" />
+<text x="345" y="237" font-size="8" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_C_SIG</text>
+<circle cx="380" cy="245" r="3.5" fill="#aaaaaa"/>
+<line x1="380" y1="245" x2="380" y2="295" stroke="#cc88ff" stroke-width="1.5" />
+<rect x="330" y="295" width="100" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="330" y="295" width="100" height="18" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<rect x="330" y="309" width="100" height="4" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<text x="380" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D12</text>
+<text x="380" y="326" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">P6KE3.3A TVS</text>
+<text x="338" y="326" font-size="7" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">K→signal</text>
+<text x="422" y="326" font-size="7" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">A→GND</text>
+<circle cx="330" cy="313" r="3" fill="#cc88ff"/>
+<line x1="380" y1="331" x2="380" y2="341" stroke="#778899" stroke-width="1.5" />
+<line x1="368" y1="341" x2="392" y2="341" stroke="#778899" stroke-width="2" />
+<line x1="372" y1="346" x2="388" y2="346" stroke="#778899" stroke-width="1.5" />
+<line x1="376" y1="351" x2="384" y2="351" stroke="#778899" stroke-width="1" />
+<text x="330" y="345" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">K=signal  A=GND</text>
+<text x="330" y="356" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Rev.biased normally</text>
+<text x="330" y="367" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Clamps spikes >3.3V</text>
+<line x1="380" y1="245" x2="450" y2="245" stroke="#cc88ff" stroke-width="2" />
+<rect x="450" y="230" width="130" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="515" y="242" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="515" y="255" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO34←MST_C_SIG</text>
+<circle cx="450" cy="245" r="3" fill="#cc88ff"/>
+<rect x="550" y="225" width="200" height="150" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="650" y="242" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_ZONE_C</text>
+<text x="650" y="255" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RJ45  T568B wiring</text>
+<circle cx="558" cy="266" r="3" fill="#cc88ff"/>
+<text x="564" y="270" font-size="7.5" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin1=MST_C_SIG</text>
+<circle cx="558" cy="277" r="3" fill="#778899"/>
+<text x="564" y="281" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin2=GND</text>
+<circle cx="558" cy="288" r="3" fill="#44cc44"/>
+<text x="564" y="292" font-size="7.5" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin3=MST_C_VCC</text>
+<circle cx="558" cy="299" r="3" fill="#ff8844"/>
+<text x="564" y="303" font-size="7.5" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin4=RLY_C_OUT</text>
+<circle cx="558" cy="310" r="3" fill="#778899"/>
+<text x="564" y="314" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin5=GND</text>
+<circle cx="558" cy="321" r="3" fill="#778899"/>
+<text x="564" y="325" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin6=GND</text>
+<circle cx="558" cy="332" r="3" fill="#ffcc00"/>
+<text x="564" y="336" font-size="7.5" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin7=+5V</text>
+<circle cx="558" cy="343" r="3" fill="#778899"/>
+<text x="564" y="347" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin8=GND</text>
+<circle cx="558" cy="354" r="3" fill="#778899"/>
+<text x="564" y="358" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pinS=GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>Zone D</h2>
+<span>Relay driver + moisture sensor · RJ45 connector J_ZONE_D</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="380" viewBox="0 0 1000 380" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="500" y="20" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ZONE D — Relay Driver + Moisture Sensor</text>
+<text x="30" y="45" font-size="9" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— RELAY DRIVER —</text>
+<rect x="10" y="55" width="120" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="70" y="66" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="70" y="78" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO14→RLY_D_SW</text>
+<circle cx="130" cy="70" r="3" fill="#ff8844"/>
+<line x1="130" y1="70" x2="160" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="145" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_D_SW</text>
+<rect x="160" y="55" width="70" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="160" y="55" width="70" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="160" y="69" width="70" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="195" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SW2</text>
+<text x="195" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">pos 4</text>
+<circle cx="160" cy="70" r="3" fill="#ff8844"/>
+<circle cx="230" cy="70" r="3" fill="#ff8844"/>
+<line x1="230" y1="70" x2="260" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="245" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_D_IN</text>
+<circle cx="260" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="260" y1="70" x2="260" y2="100" stroke="#778899" stroke-width="1.5" />
+<rect x="230" y="100" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="230" y="100" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="230" y="114" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="260" y="113" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R19</text>
+<text x="260" y="123" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">10kΩ</text>
+<circle cx="230" cy="114" r="3" fill="#778899"/>
+<line x1="260" y1="128" x2="260" y2="138" stroke="#778899" stroke-width="1.5" />
+<line x1="248" y1="138" x2="272" y2="138" stroke="#778899" stroke-width="2" />
+<line x1="252" y1="143" x2="268" y2="143" stroke="#778899" stroke-width="1.5" />
+<line x1="256" y1="148" x2="264" y2="148" stroke="#778899" stroke-width="1" />
+<text x="300" y="120" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(pulldown
+holds off
+when idle)</text>
+<line x1="260" y1="70" x2="320" y2="70" stroke="#ff8844" stroke-width="2" />
+<rect x="320" y="55" width="65" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="320" y="55" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="320" y="69" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="352" y="68" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R4</text>
+<text x="352" y="80" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="320" cy="70" r="3" fill="#ff8844"/>
+<circle cx="385" cy="70" r="3" fill="#ff8844"/>
+<line x1="385" y1="70" x2="420" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="400" y="62" font-size="8" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RLY_D_OUT</text>
+<circle cx="420" cy="70" r="3.5" fill="#aaaaaa"/>
+<line x1="420" y1="70" x2="480" y2="70" stroke="#ff8844" stroke-width="2" />
+<text x="450" y="62" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin4</text>
+<line x1="420" y1="70" x2="420" y2="140" stroke="#ff8844" stroke-width="1.5" />
+<rect x="390" y="140" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="390" y="140" width="65" height="18" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<rect x="390" y="154" width="65" height="4" rx="4" fill="#2a3a2a" stroke="none" stroke-width="1.5"/>
+<text x="422" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R12</text>
+<text x="422" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1kΩ</text>
+<circle cx="390" cy="154" r="3" fill="#ff8844"/>
+<line x1="390" y1="154" x2="455" y2="154" stroke="#ff8844" stroke-width="1.5" />
+<text x="422" y="146" font-size="7" fill="#ff8844" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ZD_LED_A</text>
+<rect x="455" y="140" width="70" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="455" y="140" width="70" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="455" y="154" width="70" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="490" y="153" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">LED7</text>
+<text x="490" y="163" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Zone LED</text>
+<circle cx="455" cy="154" r="3" fill="#ff8844"/>
+<line x1="525" y1="154" x2="535" y2="154" stroke="#778899" stroke-width="1.5" />
+<line x1="535" y1="154" x2="535" y2="164" stroke="#778899" stroke-width="1.5" />
+<line x1="523" y1="164" x2="547" y2="164" stroke="#778899" stroke-width="2" />
+<line x1="527" y1="169" x2="543" y2="169" stroke="#778899" stroke-width="1.5" />
+<line x1="531" y1="174" x2="539" y2="174" stroke="#778899" stroke-width="1" />
+<text x="460" y="185" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">A→rly_out via R  K→GND</text>
+<text x="30" y="225" font-size="9" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">— MOISTURE SENSOR —</text>
+<text x="10" y="250" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="260" x2="80" y2="260" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="245" width="90" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="245" width="90" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="259" width="90" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="125" y="258" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D5</text>
+<text x="125" y="276" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819  VCC prot</text>
+<text x="88" y="276" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="162" y="276" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="88" y="271" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="162" y="271" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="80" cy="263" r="3" fill="#44cc44"/>
+<circle cx="170" cy="263" r="3" fill="#44cc44"/>
+<line x1="170" y1="263" x2="210" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="190" y="255" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_D_VCC</text>
+<circle cx="210" cy="263" r="3.5" fill="#aaaaaa"/>
+<line x1="210" y1="263" x2="210" y2="295" stroke="#44cc44" stroke-width="1.5" />
+<rect x="180" y="295" width="60" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="180" y="295" width="60" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="180" y="309" width="60" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="210" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C7</text>
+<text x="210" y="318" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="180" cy="309" r="3" fill="#44cc44"/>
+<line x1="210" y1="323" x2="210" y2="333" stroke="#778899" stroke-width="1.5" />
+<line x1="198" y1="333" x2="222" y2="333" stroke="#778899" stroke-width="2" />
+<line x1="202" y1="338" x2="218" y2="338" stroke="#778899" stroke-width="1.5" />
+<line x1="206" y1="343" x2="214" y2="343" stroke="#778899" stroke-width="1" />
+<line x1="210" y1="263" x2="250" y2="263" stroke="#44cc44" stroke-width="2" />
+<text x="230" y="255" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_ZONE pin3</text>
+<text x="310" y="230" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">← J_ZONE pin1 (sensor signal)</text>
+<line x1="310" y1="245" x2="380" y2="245" stroke="#cc88ff" stroke-width="2" />
+<text x="345" y="237" font-size="8" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MST_D_SIG</text>
+<circle cx="380" cy="245" r="3.5" fill="#aaaaaa"/>
+<line x1="380" y1="245" x2="380" y2="295" stroke="#cc88ff" stroke-width="1.5" />
+<rect x="330" y="295" width="100" height="36" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="330" y="295" width="100" height="18" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<rect x="330" y="309" width="100" height="4" rx="4" fill="#3a1a3a" stroke="none" stroke-width="1.5"/>
+<text x="380" y="308" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D13</text>
+<text x="380" y="326" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">P6KE3.3A TVS</text>
+<text x="338" y="326" font-size="7" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">K→signal</text>
+<text x="422" y="326" font-size="7" fill="#778899" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">A→GND</text>
+<circle cx="330" cy="313" r="3" fill="#cc88ff"/>
+<line x1="380" y1="331" x2="380" y2="341" stroke="#778899" stroke-width="1.5" />
+<line x1="368" y1="341" x2="392" y2="341" stroke="#778899" stroke-width="2" />
+<line x1="372" y1="346" x2="388" y2="346" stroke="#778899" stroke-width="1.5" />
+<line x1="376" y1="351" x2="384" y2="351" stroke="#778899" stroke-width="1" />
+<text x="330" y="345" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">K=signal  A=GND</text>
+<text x="330" y="356" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Rev.biased normally</text>
+<text x="330" y="367" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Clamps spikes >3.3V</text>
+<line x1="380" y1="245" x2="450" y2="245" stroke="#cc88ff" stroke-width="2" />
+<rect x="450" y="230" width="130" height="30" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="515" y="242" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="515" y="255" font-size="7" fill="#cc88ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO35←MST_D_SIG</text>
+<circle cx="450" cy="245" r="3" fill="#cc88ff"/>
+<rect x="550" y="225" width="200" height="150" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="650" y="242" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_ZONE_D</text>
+<text x="650" y="255" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RJ45  T568B wiring</text>
+<circle cx="558" cy="266" r="3" fill="#cc88ff"/>
+<text x="564" y="270" font-size="7.5" fill="#cc88ff" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin1=MST_D_SIG</text>
+<circle cx="558" cy="277" r="3" fill="#778899"/>
+<text x="564" y="281" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin2=GND</text>
+<circle cx="558" cy="288" r="3" fill="#44cc44"/>
+<text x="564" y="292" font-size="7.5" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin3=MST_D_VCC</text>
+<circle cx="558" cy="299" r="3" fill="#ff8844"/>
+<text x="564" y="303" font-size="7.5" fill="#ff8844" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin4=RLY_D_OUT</text>
+<circle cx="558" cy="310" r="3" fill="#778899"/>
+<text x="564" y="314" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin5=GND</text>
+<circle cx="558" cy="321" r="3" fill="#778899"/>
+<text x="564" y="325" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin6=GND</text>
+<circle cx="558" cy="332" r="3" fill="#ffcc00"/>
+<text x="564" y="336" font-size="7.5" fill="#ffcc00" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin7=+5V</text>
+<circle cx="558" cy="343" r="3" fill="#778899"/>
+<text x="564" y="347" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pin8=GND</text>
+<circle cx="558" cy="354" r="3" fill="#778899"/>
+<text x="564" y="358" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pinS=GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>DHT22 Temperature/Humidity</h2></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="180" viewBox="0 0 700 180" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="350" y="18" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">DHT22 Temperature/Humidity</text>
+<text x="10" y="55" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="65" x2="80" y2="65" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="50" width="85" height="34" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="50" width="85" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="64" width="85" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="122" y="63" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D6</text>
+<text x="122" y="79" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819 VCC prot</text>
+<text x="88" y="79" font-size="8" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="157" y="79" font-size="8" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<text x="88" y="76" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">anode</text>
+<text x="157" y="76" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">cathode</text>
+<circle cx="80" cy="67" r="3" fill="#44cc44"/>
+<circle cx="165" cy="67" r="3" fill="#44cc44"/>
+<line x1="165" y1="67" x2="200" y2="67" stroke="#44cc44" stroke-width="2" />
+<text x="182" y="58" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">DHT_VCC</text>
+<circle cx="200" cy="67" r="3.5" fill="#aaaaaa"/>
+<line x1="200" y1="67" x2="200" y2="95" stroke="#44cc44" stroke-width="1.5" />
+<rect x="175" y="95" width="50" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="175" y="95" width="50" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="175" y="109" width="50" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="200" y="108" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C8</text>
+<text x="200" y="118" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="175" cy="109" r="3" fill="#44cc44"/>
+<line x1="200" y1="123" x2="200" y2="133" stroke="#778899" stroke-width="1.5" />
+<line x1="188" y1="133" x2="212" y2="133" stroke="#778899" stroke-width="2" />
+<line x1="192" y1="138" x2="208" y2="138" stroke="#778899" stroke-width="1.5" />
+<line x1="196" y1="143" x2="204" y2="143" stroke="#778899" stroke-width="1" />
+<line x1="200" y1="67" x2="250" y2="67" stroke="#44cc44" stroke-width="2" />
+<text x="225" y="58" font-size="7" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_DHT pin3</text>
+<text x="10" y="130" font-size="9" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="45" y1="140" x2="80" y2="140" stroke="#44cc44" stroke-width="2" />
+<rect x="80" y="128" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="80" y="128" width="65" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="80" y="142" width="65" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="112" y="141" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R5</text>
+<text x="112" y="151" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">10kΩ pull-up</text>
+<circle cx="80" cy="142" r="3" fill="#44cc44"/>
+<line x1="145" y1="142" x2="180" y2="142" stroke="#ff88cc" stroke-width="2" />
+<text x="162" y="133" font-size="9" fill="#ff88cc" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">DHT_DATA</text>
+<circle cx="180" cy="142" r="3.5" fill="#aaaaaa"/>
+<line x1="180" y1="142" x2="220" y2="142" stroke="#ff88cc" stroke-width="2" />
+<text x="200" y="133" font-size="7" fill="#ff88cc" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">→ J_DHT pin1</text>
+<line x1="180" y1="142" x2="180" y2="160" stroke="#ff88cc" stroke-width="1.5" />
+<rect x="155" y="160" width="110" height="24" rx="3" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="210" y="175" font-size="8" fill="#3fb950" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">ESP32 IO27=DHT_DATA</text>
+<circle cx="180" cy="167" r="3" fill="#ff88cc"/>
+<rect x="340" y="40" width="200" height="120" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="440" y="56" font-size="10" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_DHT</text>
+<text x="440" y="68" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">RJ45</text>
+<circle cx="348" cy="78" r="3" fill="#ff88cc"/>
+<text x="355" y="82" font-size="7" fill="#ff88cc" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p1=DHT_DATA</text>
+<circle cx="348" cy="87" r="3" fill="#778899"/>
+<text x="355" y="91" font-size="7" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p2=GND</text>
+<circle cx="348" cy="96" r="3" fill="#44cc44"/>
+<text x="355" y="100" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p3=DHT_VCC</text>
+<circle cx="348" cy="105" r="3" fill="#8b949e"/>
+<text x="355" y="109" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p4=NC</text>
+<circle cx="348" cy="114" r="3" fill="#778899"/>
+<text x="355" y="118" font-size="7" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p5=GND</text>
+<circle cx="348" cy="123" r="3" fill="#778899"/>
+<text x="355" y="127" font-size="7" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p6=GND</text>
+<circle cx="348" cy="132" r="3" fill="#8b949e"/>
+<text x="355" y="136" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p7=NC</text>
+<circle cx="348" cy="141" r="3" fill="#8b949e"/>
+<text x="355" y="145" font-size="7" fill="#8b949e" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p8=NC</text>
+<circle cx="348" cy="150" r="3" fill="#778899"/>
+<text x="355" y="154" font-size="7" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pS=GND</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>I2C Bus (3 ports)</h2><span>Shared SDA/SCL · Single pull-up pair R6+R7</span></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200" viewBox="0 0 1000 200" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="500" y="18" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">I2C BUS  (3 ports, shared SDA/SCL)</text>
+<text x="20" y="45" font-size="9" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">Pull-ups (one set for whole bus):</text>
+<line x1="10" y1="60" x2="40" y2="60" stroke="#44cc44" stroke-width="2" />
+<text x="25" y="52" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="40" y="48" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="40" y="48" width="65" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="40" y="62" width="65" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="72" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R6</text>
+<text x="72" y="71" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">4.7kΩ SDA↑</text>
+<circle cx="40" cy="62" r="3" fill="#44cc44"/>
+<line x1="105" y1="62" x2="140" y2="62" stroke="#66aaff" stroke-width="2" />
+<text x="122" y="54" font-size="9" fill="#66aaff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SDA</text>
+<line x1="10" y1="100" x2="40" y2="100" stroke="#44cc44" stroke-width="2" />
+<text x="25" y="92" font-size="8" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="40" y="88" width="65" height="28" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="40" y="88" width="65" height="18" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="40" y="102" width="65" height="4" rx="4" fill="#2a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="72" y="101" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">R7</text>
+<text x="72" y="111" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">4.7kΩ SCL↑</text>
+<circle cx="40" cy="102" r="3" fill="#44cc44"/>
+<line x1="105" y1="102" x2="140" y2="102" stroke="#4488ff" stroke-width="2" />
+<text x="122" y="94" font-size="9" fill="#4488ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SCL</text>
+<rect x="140" y="48" width="120" height="70" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="200" y="63" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="200" y="77" font-size="8" fill="#66aaff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO21=SDA</text>
+<text x="200" y="91" font-size="8" fill="#4488ff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO22=SCL</text>
+<text x="200" y="105" font-size="7" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">(I2C master)</text>
+<circle cx="140" cy="77" r="3" fill="#66aaff"/>
+<circle cx="140" cy="91" r="3" fill="#4488ff"/>
+<rect x="300" y="48" width="80" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="300" y="48" width="80" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="300" y="62" width="80" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="340" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D7</text>
+<text x="340" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819 VCC</text>
+<text x="308" y="70" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="372" y="70" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<circle cx="300" cy="63" r="3" fill="#44cc44"/>
+<line x1="290" y1="63" x2="300" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<text x="288" y="60" font-size="7" fill="#44cc44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="390" y="48" width="50" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="390" y="48" width="50" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="390" y="62" width="50" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="415" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C9</text>
+<text x="415" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="390" cy="63" r="3" fill="#44cc44"/>
+<line x1="380" y1="63" x2="390" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<line x1="415" y1="78" x2="415" y2="88" stroke="#778899" stroke-width="1.5" />
+<line x1="403" y1="88" x2="427" y2="88" stroke="#778899" stroke-width="2" />
+<line x1="407" y1="93" x2="423" y2="93" stroke="#778899" stroke-width="1.5" />
+<line x1="411" y1="98" x2="419" y2="98" stroke="#778899" stroke-width="1" />
+<rect x="300" y="88" width="145" height="90" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="372" y="102" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_I2C_1</text>
+<text x="372" y="114" font-size="7.5" fill="#66aaff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p1=SDA  p2=GND</text>
+<text x="372" y="126" font-size="7.5" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p3=VCC  p4=SCL</text>
+<text x="372" y="138" font-size="7.5" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p5,p6=GND</text>
+<line x1="300" y1="114" x2="290" y2="114" stroke="#66aaff" stroke-width="1.5" />
+<line x1="300" y1="126" x2="290" y2="126" stroke="#4488ff" stroke-width="1.5" />
+<line x1="380" y1="63" x2="380" y2="88" stroke="#44cc44" stroke-width="1.5" />
+<rect x="530" y="48" width="80" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="530" y="48" width="80" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="530" y="62" width="80" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="570" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D8</text>
+<text x="570" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819 VCC</text>
+<text x="538" y="70" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="602" y="70" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<circle cx="530" cy="63" r="3" fill="#44cc44"/>
+<line x1="520" y1="63" x2="530" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<text x="518" y="60" font-size="7" fill="#44cc44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="620" y="48" width="50" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="620" y="48" width="50" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="620" y="62" width="50" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="645" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C10</text>
+<text x="645" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="620" cy="63" r="3" fill="#44cc44"/>
+<line x1="610" y1="63" x2="620" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<line x1="645" y1="78" x2="645" y2="88" stroke="#778899" stroke-width="1.5" />
+<line x1="633" y1="88" x2="657" y2="88" stroke="#778899" stroke-width="2" />
+<line x1="637" y1="93" x2="653" y2="93" stroke="#778899" stroke-width="1.5" />
+<line x1="641" y1="98" x2="649" y2="98" stroke="#778899" stroke-width="1" />
+<rect x="530" y="88" width="145" height="90" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="602" y="102" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_I2C_2</text>
+<text x="602" y="114" font-size="7.5" fill="#66aaff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p1=SDA  p2=GND</text>
+<text x="602" y="126" font-size="7.5" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p3=VCC  p4=SCL</text>
+<text x="602" y="138" font-size="7.5" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p5,p6=GND</text>
+<line x1="530" y1="114" x2="520" y2="114" stroke="#66aaff" stroke-width="1.5" />
+<line x1="530" y1="126" x2="520" y2="126" stroke="#4488ff" stroke-width="1.5" />
+<line x1="610" y1="63" x2="610" y2="88" stroke="#44cc44" stroke-width="1.5" />
+<rect x="760" y="48" width="80" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="760" y="48" width="80" height="18" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<rect x="760" y="62" width="80" height="4" rx="4" fill="#1a2a3a" stroke="none" stroke-width="1.5"/>
+<text x="800" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">D9</text>
+<text x="800" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">1N5819 VCC</text>
+<text x="768" y="70" font-size="7" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">A</text>
+<text x="832" y="70" font-size="7" fill="#f85149" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">K</text>
+<circle cx="760" cy="63" r="3" fill="#44cc44"/>
+<line x1="750" y1="63" x2="760" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<text x="748" y="60" font-size="7" fill="#44cc44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<rect x="850" y="48" width="50" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="850" y="48" width="50" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="850" y="62" width="50" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="875" y="61" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C11</text>
+<text x="875" y="73" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100nF</text>
+<circle cx="850" cy="63" r="3" fill="#44cc44"/>
+<line x1="840" y1="63" x2="850" y2="63" stroke="#44cc44" stroke-width="1.5" />
+<line x1="875" y1="78" x2="875" y2="88" stroke="#778899" stroke-width="1.5" />
+<line x1="863" y1="88" x2="887" y2="88" stroke="#778899" stroke-width="2" />
+<line x1="867" y1="93" x2="883" y2="93" stroke="#778899" stroke-width="1.5" />
+<line x1="871" y1="98" x2="879" y2="98" stroke="#778899" stroke-width="1" />
+<rect x="760" y="88" width="145" height="90" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="832" y="102" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">J_I2C_3</text>
+<text x="832" y="114" font-size="7.5" fill="#66aaff" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p1=SDA  p2=GND</text>
+<text x="832" y="126" font-size="7.5" fill="#44cc44" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p3=VCC  p4=SCL</text>
+<text x="832" y="138" font-size="7.5" fill="#778899" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">p5,p6=GND</text>
+<line x1="760" y1="114" x2="750" y2="114" stroke="#66aaff" stroke-width="1.5" />
+<line x1="760" y1="126" x2="750" y2="126" stroke="#4488ff" stroke-width="1.5" />
+<line x1="840" y1="63" x2="840" y2="88" stroke="#44cc44" stroke-width="1.5" />
+<text x="500" y="190" font-size="8" fill="#d29922" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SDA and SCL are shared across all 3 ports — I2C bus topology. Only ONE set of pull-ups needed (R6+R7).</text>
+</svg>
+
+</div>
+
+<div class="section">
+<div class="sec-title"><h2>SD Card (SPI mode)</h2></div>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="220" viewBox="0 0 820 220" style="background:#0d1117;display:block;margin:0 auto">
+<defs><marker id="dot" markerWidth="4" markerHeight="4" refX="2" refY="2"><circle cx="2" cy="2" r="1.8" fill="#aaaaaa"/></marker></defs>
+<text x="410" y="18" font-size="13" fill="#58a6ff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SD CARD  (SPI mode)</text>
+<rect x="10" y="40" width="130" height="130" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="75" y="58" font-size="9" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">ESP32</text>
+<text x="75" y="72" font-size="8" fill="#ffee88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO5=SD_CS</text>
+<circle cx="140" cy="64" r="3" fill="#ffee88"/>
+<line x1="140" y1="64" x2="180" y2="64" stroke="#ffee88" stroke-width="1.5" />
+<text x="160" y="56" font-size="7" fill="#ffee88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SD_CS</text>
+<text x="75" y="96" font-size="8" fill="#ffaa88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO23=SD_MOSI</text>
+<circle cx="140" cy="88" r="3" fill="#ffaa88"/>
+<line x1="140" y1="88" x2="180" y2="88" stroke="#ffaa88" stroke-width="1.5" />
+<text x="160" y="80" font-size="7" fill="#ffaa88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SD_MOSI</text>
+<text x="75" y="120" font-size="8" fill="#ff8888" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO19=SD_MISO</text>
+<circle cx="140" cy="112" r="3" fill="#ff8888"/>
+<line x1="140" y1="112" x2="180" y2="112" stroke="#ff8888" stroke-width="1.5" />
+<text x="160" y="104" font-size="7" fill="#ff8888" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SD_MISO</text>
+<text x="75" y="144" font-size="8" fill="#ffcc88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">IO18=SD_SCK</text>
+<circle cx="140" cy="136" r="3" fill="#ffcc88"/>
+<line x1="140" y1="136" x2="180" y2="136" stroke="#ffcc88" stroke-width="1.5" />
+<text x="160" y="128" font-size="7" fill="#ffcc88" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">SD_SCK</text>
+<text x="185" y="40" font-size="8" fill="#c9d1d9" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">R8 10kΩ CS pull-up</text>
+<line x1="185" y1="50" x2="185" y2="64" stroke="#ffee88" stroke-width="1.5" />
+<text x="175" y="58" font-size="7" fill="#44cc44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="160" y1="55" x2="185" y2="55" stroke="#44cc44" stroke-width="1.5" />
+<rect x="230" y="40" width="200" height="140" rx="4" fill="#0d1f12" stroke="#3fb950" stroke-width="1.5"/>
+<text x="330" y="58" font-size="10" fill="#3fb950" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">SD_MOD</text>
+<text x="330" y="70" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">MicroSD Socket</text>
+<circle cx="230" cy="82" r="3" fill="#44cc44"/>
+<text x="237" y="86" font-size="7.5" fill="#44cc44" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p4=VDD</text>
+<circle cx="230" cy="93" r="3" fill="#778899"/>
+<text x="237" y="97" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p6=VSS</text>
+<circle cx="230" cy="104" r="3" fill="#ffee88"/>
+<text x="237" y="108" font-size="7.5" fill="#ffee88" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p2=CS (DAT3)</text>
+<circle cx="230" cy="115" r="3" fill="#ffaa88"/>
+<text x="237" y="119" font-size="7.5" fill="#ffaa88" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p3=MOSI (CMD)</text>
+<circle cx="230" cy="126" r="3" fill="#ff8888"/>
+<text x="237" y="130" font-size="7.5" fill="#ff8888" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p7=MISO (DAT0)</text>
+<circle cx="230" cy="137" r="3" fill="#ffcc88"/>
+<text x="237" y="141" font-size="7.5" fill="#ffcc88" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p5=SCK (CLK)</text>
+<circle cx="230" cy="148" r="3" fill="#778899"/>
+<text x="237" y="152" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p1=DAT2→GND</text>
+<circle cx="230" cy="159" r="3" fill="#778899"/>
+<text x="237" y="163" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">p8=DAT1→GND</text>
+<circle cx="230" cy="170" r="3" fill="#778899"/>
+<text x="237" y="174" font-size="7.5" fill="#778899" text-anchor="start" font-weight="normal" font-family="Consolas,monospace">pSH=Shield→GND</text>
+<rect x="460" y="75" width="70" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="460" y="75" width="70" height="18" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<rect x="460" y="89" width="70" height="4" rx="4" fill="#2a2a1a" stroke="none" stroke-width="1.5"/>
+<text x="495" y="88" font-size="10" fill="#fff" text-anchor="middle" font-weight="bold" font-family="Consolas,monospace">C12</text>
+<text x="495" y="100" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">100µF VCC</text>
+<line x1="460" y1="90" x2="450" y2="90" stroke="#44cc44" stroke-width="1.5" />
+<text x="448" y="88" font-size="7" fill="#44cc44" text-anchor="end" font-weight="normal" font-family="Consolas,monospace">+3V3</text>
+<line x1="495" y1="105" x2="495" y2="115" stroke="#778899" stroke-width="1.5" />
+<line x1="483" y1="115" x2="507" y2="115" stroke="#778899" stroke-width="2" />
+<line x1="487" y1="120" x2="503" y2="120" stroke="#778899" stroke-width="1.5" />
+<line x1="491" y1="125" x2="499" y2="125" stroke="#778899" stroke-width="1" />
+<text x="330" y="195" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">DAT2 (pin1) and DAT1 (pin8) unused in SPI mode — tied to GND</text>
+<text x="330" y="210" font-size="8" fill="#8b949e" text-anchor="middle" font-weight="normal" font-family="Consolas,monospace">DAT3/CD (pin2) = SPI chip select</text>
+</svg>
+
+</div>
+
+<div class="note">
+SW2 DIP SWITCH — Zone enable: each position (1-4) connects RLY_x_SW to RLY_x_IN when ON.
+With standard DIP numbering: pos1 bridges pad1↔pad8, pos2↔pad7, pos3↔pad6, pos4↔pad5.
+NETLIST corrected: pad8=RLY_A_IN, pad7=RLY_B_IN, pad6=RLY_C_IN, pad5=RLY_D_IN.
+</div>
+
+</body></html>

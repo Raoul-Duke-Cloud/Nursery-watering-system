@@ -69,12 +69,12 @@ const char* ZONE_LABELS[NUM_ZONES] = { "zone_a", "zone_b", "zone_c", "zone_d" };
 
 // Enable / disable test sections — set false to skip hardware you don't have
 #define TEST_DHT      true
-#define TEST_BH1750   false
-#define TEST_MLX      false
-#define TEST_MOISTURE false
-#define TEST_ADS1115  false  // secondary moisture via ADS1115 I2C ADC
-#define TEST_RELAYS   false  // pulse each relay once on boot
-#define TEST_SD       false
+#define TEST_BH1750   true
+#define TEST_MLX      true
+#define TEST_MOISTURE true
+#define TEST_ADS1115  true   // secondary moisture via ADS1115 I2C ADC
+#define TEST_RELAYS   true   // pulse each relay once on boot
+#define TEST_SD       true
 
 // ═══════════════════════════════════════════════════════════════════
 // GLOBALS
